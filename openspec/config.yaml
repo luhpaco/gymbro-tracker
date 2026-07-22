@@ -1,0 +1,66 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Next.js 14.2.3 (App Router), React 18, TypeScript 5 (strict), pnpm
+  Database: PostgreSQL 15 via Docker, Prisma 5.16.1 ORM
+  Auth: Next-Auth 5 (Credentials provider, middleware-protected routes)
+  Styling: Tailwind CSS 3.4, shadcn/ui (Radix UI), class-variance-authority
+  Forms/validation: React Hook Form + Zod
+  State: Zustand (exercise, workout, UI stores)
+  Architecture: feature-grouped server actions, App Router with RSC, Prisma data layer
+  Linting: ESLint (next/core-web-vitals), no formatter configured
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing feature-based server actions pattern
+      - Keep Prisma queries in lib/ or data/ layer, not in components
+      - Use Zod schemas for all server action inputs
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "pnpm build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+testing:
+  strict_tdd: false
+  reason: "No test runner configured in project"
+  detected: "2026-07-22"
+  runner:
+    available: false
+    framework: none
+    command: ""
+  layers:
+    unit: false
+    integration: false
+    e2e: false
+  coverage:
+    available: false
+    command: ""
+  quality:
+    linter:
+      available: true
+      tool: "ESLint"
+      command: "pnpm lint"
+    type_checker:
+      available: true
+      tool: "TypeScript"
+      command: "pnpm exec tsc --noEmit"
+    formatter:
+      available: false
+      tool: ""
+      command: ""
