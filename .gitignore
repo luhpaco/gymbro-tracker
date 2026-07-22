@@ -36,3 +36,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Local AI runtime state
+.atl/
+# Inter-agent scratch space (handoffs, drafts, session notes)
+# See design/README.md and CLAUDE.md for the convention.
+/design/
