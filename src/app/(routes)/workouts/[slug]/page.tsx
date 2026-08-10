@@ -1,5 +1,5 @@
 import { getWorkoutBySlug } from "@/actions";
-import { auth } from "@/auth.config";
+import { auth } from "@/auth";
 import { ReturnButton } from "@/components";
 import {
 	Table,

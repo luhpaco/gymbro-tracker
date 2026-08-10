@@ -1,7 +1,7 @@
 import { getWorkouts } from "@/actions";
 import { WorkoutsSection } from "./components/WorkoutsSection";
 import { WorkoutToDisplay } from "@/interfaces";
-import { auth } from "@/auth.config";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 export default async function WorkoutsPage() {

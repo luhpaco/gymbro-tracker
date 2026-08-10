@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth.config";
+import { auth } from "@/auth";
 import { CreateExerciseFormData } from "@/components/exercise/CreateExerciseForm";
 import prisma from "@/lib/prisma";
 

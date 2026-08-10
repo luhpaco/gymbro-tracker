@@ -1,5 +1,5 @@
 import { getExerciseById, getMuscleGroups } from "@/actions";
-import { auth } from "@/auth.config";
+import { auth } from "@/auth";
 import { ReturnButton, UpdateExerciseForm } from "@/components";
 
 interface Props {

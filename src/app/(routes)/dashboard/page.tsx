@@ -1,5 +1,5 @@
 import { getExercisesSummary, getWorkouts } from "@/actions";
-import { auth } from "@/auth.config";
+import { auth } from "@/auth";
 import { ResumeCard } from "@/components";
 import { redirect } from "next/navigation";
 
