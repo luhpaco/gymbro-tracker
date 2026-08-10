@@ -1,30 +1,30 @@
 ```yaml
 schema: gentle-ai.verify-result/v1
-evidence_revision: sha256:2fcd81f819f30e5e2d613d9446f55d771313faa4a905bc7d318ac8bd8f786e94
-verdict: fail
-blockers: 1
+evidence_revision: sha256:f421953025e1530cc198fb71089685e4464802cf80b7807103af594652d893c5
+verdict: pass_with_warnings
+blockers: 0
 critical_findings: 0
-requirements: 2/6
-scenarios: 3/9
+requirements: 6/6
+scenarios: 9/9
 test_command: pnpm exec tsc --noEmit
 test_exit_code: 0
 test_output_hash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 build_command: pnpm build
 build_exit_code: 0
-build_output_hash: sha256:f24a26cec6149693499ec64a212e39059a23f3dccfc455ab482c2aa4cd5d8101
+build_output_hash: sha256:072303fad98e2ec22ff16b0b19c12ddc7058fdaad67d34a4f8d65636d3e62f62
 ```
 
-# Verification Report: nextjs-15-upgrade
+# Verification Report: nextjs-15-upgrade (final pass)
 
-> **How to read the envelope.** `verdict: fail` and `blockers: 1` mean **verification evidence is incomplete**, not that the implementation is defective. `critical_findings: 0` is the defect count and it is zero. The single blocker is the not-yet-performed Phase 6 manual checklist and its blocking user sign-off (task 6.8), which the spec makes a hard precondition for archive and which is owned separately by the orchestrator. The envelope's passing verdicts are only admissible when every requirement and scenario is covered, and 6 of 9 scenarios here are runtime scenarios that the spec deliberately routes through Phase 6. Phases 1-5 pass cleanly — see the Verdict section.
+**Supersedes** the prior partial report, which covered Phases 1-5 only and returned `verdict: fail` because the Phase 6 manual checklist was outstanding. Phase 6 is now complete with explicit user sign-off dated 2026-08-10, and a `trustHost: true` fix landed in `src/auth.config.ts` after that report was written. This pass re-verifies the full current candidate.
 
-`evidence_revision` is the SHA-256 of the tracked working-tree diff (`git diff | sha256sum`). It is byte-identical to the Judgment Day target identity, so this verification and the Judgment Day review inspected exactly the same candidate.
+`evidence_revision` is the SHA-256 of `git diff c8027c7..HEAD` — the three commits that constitute this change (`2d28bb7` upgrade, `18898a3` trustHost fix, `325dddb` SDD artifacts). It differs from the prior report's revision because the trustHost fix and the artifact commit did not exist then.
 
 ## Scope of this verification
 
-- **In scope**: Phases 1-5 (tasks 1.1-5.3) — dependency matrix, async params codemod, calendar migration, config/docs sync, static gates — plus scope-boundary and undeclared-change auditing.
-- **Out of scope**: Phase 6 (6.1-6.8), the manual browser checklist and its blocking user sign-off. It is owned separately and remains **OUTSTANDING**. This report does not claim, close, or substitute for it.
-- **No test runner exists** for this project (`openspec/config.yaml` → `testing.strict_tdd: false`, `runner.available: false`, `verify.test_command: ""`). Per the design's "Testing Strategy (no runner — gates are the test suite)", the type-check, lint, and build gates are the executable evidence; the `test_command` envelope field records the type-check gate.
+- **In scope**: all 25 tasks (Phases 1-6), all 6 spec requirements and 9 scenarios, the full diff of `feature/nextjs-15-upgrade` against `origin/master`, and the new `trustHost: true` edit.
+- **Working tree**: clean (`git status --porcelain` empty). Local `master` == `origin/master` == `f3a9cd1`.
+- **No test runner exists** (`openspec/config.yaml`: `strict_tdd: false`, `runner.available: false`, `verify.test_command: ""`). Per the design's "Testing Strategy (no runner — gates are the test suite)", type-check/lint/build are the executable evidence and the spec's Requirement 5 makes the manual browser checklist the admissible evidence class for runtime scenarios.
 
 ## Gate Evidence (executed first-hand during this verification)
 
@@ -32,111 +32,105 @@ build_output_hash: sha256:f24a26cec6149693499ec64a212e39059a23f3dccfc455ab482c2a
 |---|---|---|---|
 | Type check | `pnpm exec tsc --noEmit` | 0 | empty (`sha256:e3b0c442…7852b855`) |
 | Lint | `pnpm lint` | 0 | 1 pre-existing warning: `react-hooks/exhaustive-deps` at `src/app/auth/login/ui/LoginForm.tsx:65:5`; plus Next 15.5's `next lint is deprecated` notice |
-| Build | `pnpm build` | 0 | `✓ Generating static pages (14/14)`; 14 routes emitted; `ƒ Middleware 125 kB` bundled; `.next/BUILD_ID` present |
+| Build | `pnpm build` | 0 | `✓ Generating static pages (14/14)`; 14 routes emitted; `ƒ Middleware 125 kB`; **zero** matches for `next-auth` / `UntrustedHost` / `AuthError` anywhere in build output |
 
-Harness sanity check: injecting a deliberate type error into a scratch file made `tsc` fail with `TS2322` and a non-zero exit, so the clean exit-0 result is a real pass, not a silently skipped run.
-
-Build-output triage: exactly 2 `PrismaClientInitializationError` and 2 `Dynamic server usage`/`DYNAMIC_SERVER_USAGE` messages appear during static-generation attempts for DB-dependent routes. No `POSTGRES_URL` is configured in this environment, so these are expected non-fatal messages; the build still exits 0. **Zero `next-auth` warnings or stack traces appear anywhere in the build output** — a positive early signal for the #11006 risk, though not a substitute for the Phase 6 runtime check.
+Build-output triage: `PrismaClientInitializationError` and `DYNAMIC_SERVER_USAGE` messages appear during static-generation attempts for DB-dependent routes. No `POSTGRES_URL` is set in this verification environment, so these are expected non-fatal messages; the build still exits 0 and emits all routes.
 
 ## Requirement Compliance Matrix
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| R1 | Framework and Runtime Version Contract | **VERIFIED** | See dependency table below; both R1 scenarios pass |
-| R2 | Auth-Gate Invariant | **PENDING — Phase 6** | Static only: `src/middleware.ts` and `src/auth.config.ts` are byte-unmodified (`git status` shows neither file); middleware bundles at 125 kB and `/api/auth/[...nextauth]` is emitted. Runtime redirect behavior is unproven. |
-| R3 | Dynamic Route Params Invariant | **PARTIAL** | Code-level conformance verified (below); both dynamic routes build. Actual page render is Phase 6 (6.5). |
-| R4 | Calendar Component Functional Parity | **PARTIAL** | Prop bindings and v9 API verified statically; open/select/close behavior is Phase 6 (6.6). |
-| R5 | Manual Verification Checklist | **PENDING — Phase 6** | Blocking user sign-off (task 6.8) not performed. |
-| R6 | Upgrade Scope Boundary (Non-Goals) | **VERIFIED** | See non-goals audit below. |
+| R1 | Framework and Runtime Version Contract | **VERIFIED** | Lockfile + manifest cross-check (below); `tsc` and `lint` both exit 0 |
+| R2 | Auth-Gate Invariant | **VERIFIED (with W-6)** | `src/middleware.ts` byte-unmodified; `authorized()` logic in `src/auth.config.ts` byte-unmodified; middleware bundles at 125 kB; `/api/auth/[...nextauth]` emitted; user-attested manual pass of 6.2/6.3/6.4/6.7 including a successful login and an authenticated write. **Caveat**: one line (`trustHost: true`) was added to `authConfig` — see W-6 |
+| R3 | Dynamic Route Params Invariant | **VERIFIED** | Both sites typed `Promise<…>` with `await params` as first statement; repo-wide grep for synchronous `params.slug`/`params.id` and `React.use(` returns zero; both routes build as `ƒ`; user-attested manual render (6.5) |
+| R4 | Calendar Component Functional Parity | **VERIFIED** | v9 shadcn variant in place; `initialFocus` → `autoFocus` (repo-wide grep for `initialFocus`: zero); bindings unchanged; user-attested manual open/select/close (6.6) |
+| R5 | Manual Verification Checklist | **VERIFIED** | Explicit user sign-off recorded in `tasks.md` dated 2026-08-10 confirming 6.1-6.7 passed, including login and protected-route write |
+| R6 | Upgrade Scope Boundary (Non-Goals) | **VERIFIED** | Non-goals audit below, re-run first-hand |
 
-| # | Scenario | Status |
-|---|---|---|
-| R1-S1 | Lockfile resolves pinned versions | **PASS** |
-| R1-S2 | Type-check and lint pass under the new baseline | **PASS** |
-| R2-S1 | Logged-out access redirects to login with origin | **PENDING (Phase 6.2)** |
-| R2-S2 | Logged-in access redirects away from login | **PENDING (Phase 6.4)** |
-| R3-S1 | Workout slug page renders with awaited params | **PENDING RUNTIME (Phase 6.5)** — code conformant |
-| R3-S2 | Exercise update page renders with awaited params | **PENDING RUNTIME (Phase 6.5)** — code conformant |
-| R4-S1 | Date picker opens, selects a date, and closes | **PENDING (Phase 6.6)** |
-| R5-S1 | Manual sign-off blocks archive | **PENDING (Phase 6.8)** |
-| R6-S1 | Out-of-scope work is absent from this change | **PASS** |
+| # | Scenario | Status | Evidence class |
+|---|---|---|---|
+| R1-S1 | Lockfile resolves pinned versions | **PASS** | Static — lockfile inspection |
+| R1-S2 | Type-check and lint pass under the new baseline | **PASS** | Runtime — both commands exit 0 |
+| R2-S1 | Logged-out access redirects to login with origin | **PASS** | Manual (6.2), user-attested |
+| R2-S2 | Logged-in access redirects away from login | **PASS** | Manual (6.4), user-attested |
+| R3-S1 | Workout slug page renders with awaited params | **PASS** | Manual (6.5) + code conformance + build |
+| R3-S2 | Exercise update page renders with awaited params | **PASS** | Manual (6.5) + code conformance + build |
+| R4-S1 | Date picker opens, selects a date, and closes | **PASS** | Manual (6.6), user-attested |
+| R5-S1 | Manual sign-off blocks archive | **PASS** | Sign-off present and dated in `tasks.md` |
+| R6-S1 | Out-of-scope work is absent from this change | **PASS** | Static — non-goals audit |
 
-Completed: 2/6 requirements, 3/9 scenarios. The remaining 4 requirements / 6 scenarios are **not failures** — they are runtime scenarios the spec deliberately routes through the Phase 6 manual checklist.
+Completed: 6/6 requirements, 9/9 scenarios.
+
+**Evidence-class honesty note**: scenarios R2-S1, R2-S2, R4-S1 and the runtime half of R3-S1/R3-S2 rest on the user's recorded attestation, not on an observation I made myself. The spec deliberately designates manual verification as the admissible evidence class for this project (Requirement 5, "No Automated Test Runner"), so this is contract-compliant — but it is attestation, not machine-reproducible proof, and it will not re-run automatically on the next change.
 
 ## 1. Dependency Matrix — VERIFIED
 
-Cross-checked across `package.json`, `pnpm-lock.yaml` (`importers` block), and the installed `node_modules` package manifests. All three agree.
+| Package | Requirement | `package.json` | Lockfile resolution | Verdict |
+|---|---|---|---|---|
+| `next` | 15.x | `15.5.23` | `15.5.23` | PASS |
+| `react` | 19.x | `19.2.8` | `19.2.8` | PASS |
+| `react-dom` | 19.x | `19.2.8` | `19.2.8` | PASS |
+| `next-auth` | exactly `5.0.0-beta.32`, bare | `5.0.0-beta.32` | `5.0.0-beta.32` (single entry; no second version in the lockfile) | PASS |
+| `react-day-picker` | `^9` | `^9` | `9.14.0` | PASS |
+| `eslint-config-next` | matched to the 15.x line | `15.5.23` | `15.5.23` | PASS — exact match with `next` |
+| `@types/react` | React 19 types | `19.2.18` | `19.2.18` | PASS |
+| `@types/react-dom` | React 19 types | `19.2.4` | `19.2.4` | PASS |
 
-| Package | Spec/design requirement | `package.json` | Lockfile resolution | Installed | Verdict |
-|---|---|---|---|---|---|
-| `next` | 15.x | `15.5.23` | `15.5.23` | 15.5.23 | PASS |
-| `react` | 19.x | `19.2.8` | `19.2.8` | 19.2.8 | PASS |
-| `react-dom` | 19.x | `19.2.8` | `19.2.8` | 19.2.8 | PASS |
-| `next-auth` | exactly `5.0.0-beta.32`, bare, no `^`/range | `5.0.0-beta.32` | `5.0.0-beta.32` (single entry, no second version anywhere in the lockfile) | 5.0.0-beta.32 | PASS |
-| `react-day-picker` | `^9` | `^9` | `9.14.0` | 9.14.0 | PASS |
-| `eslint-config-next` | matched to the 15.x line | `15.5.23` | `15.5.23` | 15.5.23 | PASS — exact match with `next` |
-| `@types/react` | React 19 types | `19.2.18` | `19.2.18` | 19.2.18 | PASS |
-| `@types/react-dom` | React 19 types | `19.2.4` | `19.2.4` | 19.2.4 | PASS |
+Installed `node_modules/next-auth/package.json` reports `5.0.0-beta.32`, confirming the manifest, the lockfile, and the installed tree all agree.
 
-Every transitive React consumer in the lockfile (`@radix-ui/*`, `cmdk`, `react-hook-form`, `zustand`, `lucide-react`, `@hookform/resolvers`) re-resolved against `react@19.2.8` / `@types/react@19.2.18`, confirming task 1.4's lockfile refresh actually took effect rather than leaving a stale React 18 subtree.
+Note: `node_modules/.pnpm/` still contains a stale `next-auth@5.0.0-beta.20_next@14.2.3_react-dom@18.3.1…` directory from the pre-upgrade install. It is unreferenced by the lockfile and by `node_modules/next-auth`, so it is inert store residue, not a dual resolution. `pnpm store prune` clears it.
 
 ## 2. Async Params Codemod — VERIFIED
 
-`src/app/(routes)/workouts/[slug]/page.tsx`:
-- `interface Props { params: Promise<{ slug: string }> }` — correct.
-- `const { slug } = await params;` is the **first statement** of the component, preceding `auth()` and `getWorkoutBySlug(decodeURIComponent(slug), …)`.
+- `src/app/(routes)/workouts/[slug]/page.tsx`: `interface Props { params: Promise<{ slug: string }> }`; `const { slug } = await params;` is the first statement, preceding `auth()` and `getWorkoutBySlug(decodeURIComponent(slug), …)`.
+- `src/app/(routes)/exercises/update/[id]/page.tsx`: `interface Props { params: Promise<{ id: string }> }`; `const { id } = await params;` is the first statement, preceding `getExerciseById(id, session!.user.id)`.
+- Repo-wide greps (task 2.4): `params.slug`/`params.id` → zero; `React.use(` → zero; `searchParams`/`cookies()`/`headers()` → zero, confirming only two async-request call sites exist.
 
-`src/app/(routes)/exercises/update/[id]/page.tsx`:
-- `interface Props { params: Promise<{ id: string }> }` — correct.
-- `const { id } = await params;` is the first statement, preceding `getExerciseById(id, session!.user.id)`.
+## 3. Calendar Migration — VERIFIED
 
-Task 2.4 checks, run as repository-wide greps:
-- `params.slug` / `params.id` synchronous reads: **zero matches** in `src/`.
-- `React.use(` introduced into a Server Component: **zero matches** in `src/`.
-- `searchParams`, `cookies()`, `headers()`: **zero matches** in `src/`, confirming the design's claim that only two async-request call sites exist.
+- `src/components/ui/calendar.tsx` fully replaced with the shadcn v9 variant: `getDefaultClassNames()`, v9 slot keys (`month_grid`, `weekdays`, `day_button`, `button_previous`/`button_next`), a `Chevron` component replacing `IconLeft`/`IconRight`, and a new `CalendarDayButton` export.
+- `src/components/workout/SummaryWorkoutForm.tsx`: `initialFocus` → `autoFocus`. Repo-wide grep for `initialFocus`: zero matches.
+- Bindings unchanged (task 3.3): `mode='single'`, `selected={field.value}`, `onSelect`, `disabled={(date) => …}`; popover open/close still owned by `isCalendarOpen`.
+- API surface: the removed `CalendarProps` export and `Calendar.displayName` have no consumers; `SummaryWorkoutForm.tsx` is the only importer.
 
-## 3. Calendar Migration — VERIFIED (static)
-
-- `src/components/ui/calendar.tsx` was fully replaced. The pre-upgrade file was confirmed verbatim stock shadcn v8 (`IconLeft`/`IconRight`, `nav_button`, `head_row`, `day_selected` class keys, zero local customization) — the design's premise for the `--overwrite` approach holds, so nothing project-specific was lost.
-- The new file is the shadcn v9 variant: `getDefaultClassNames()`, v9 class keys (`month_grid`, `weekdays`, `day_button` slots, `button_previous`/`button_next`), a `Chevron` component replacing `IconLeft`/`IconRight`, and a `CalendarDayButton` export.
-- `src/components/workout/SummaryWorkoutForm.tsx`: `initialFocus` → `autoFocus` (task 3.2). Repository-wide grep for `initialFocus`: **zero matches**.
-- Task 3.3 bindings confirmed unchanged: `mode='single'`, `selected={field.value}`, `onSelect={(e) => { field.onChange(e); setIsCalendarOpen(false); }}`, `disabled={(date) => …}`. Popover open/close still owned by `isCalendarOpen`, exactly as the design specified.
-- API-surface note: the old module exported a `CalendarProps` type and set `Calendar.displayName`; the new one exports `{ Calendar, CalendarDayButton }`. Grep confirms **no consumer** referenced `CalendarProps` or `Calendar.displayName`, and `SummaryWorkoutForm.tsx` is the only importer. No breakage.
-
-## 4. Non-Goals Audit (R6) — VERIFIED CLEAN
+## 4. Non-Goals Audit (R6) — VERIFIED CLEAN (re-run)
 
 | Non-goal | Evidence |
 |---|---|
-| No Turbopack config | `next.config.mjs` is unmodified and contains only the `/` → `/dashboard` redirect; no `turbo`/`turbopack` key in `next.config.mjs` or `package.json`; build scripts still `next build` / `next dev` with no `--turbopack` flag |
-| No `middleware.ts` → `proxy.ts` rename | `src/middleware.ts` present and unmodified; no `src/proxy.ts` exists |
-| No ESLint flat-config migration | `.eslintrc.json` present and unmodified (`{"extends": "next/core-web-vitals"}`); no `eslint.config.*` file exists |
+| No Turbopack config | `next.config.mjs` contains only the `/` → `/dashboard` redirect; grep for `turbo` in `package.json` and `next.config.mjs` returns zero; scripts remain `next build` / `next dev` |
+| No `middleware.ts` → `proxy.ts` rename | `src/middleware.ts` present and byte-unmodified; `src/proxy.ts` absent |
+| No ESLint flat-config migration | `.eslintrc.json` present and unmodified; no `eslint.config.*` file exists |
 | No Node engine pin | No `engines` field in `package.json`; no `.nvmrc` |
 | No `serverExternalPackages` for Prisma | Absent from `next.config.mjs` |
-| No product-behavior change | `src/middleware.ts`, `src/auth.config.ts` unmodified; the only non-dependency source edits are the two `await params` sites, the calendar swap, and one prop rename |
+| Product behavior otherwise unchanged | Only source edits: two `await params` sites, the calendar swap, one prop rename, one type annotation, and the `trustHost` line (W-6) |
 
 ## 5. Task Completeness
 
-- **Phases 1-5 (tasks 1.1-5.3, 16 tasks)**: all checked, and every one independently corroborated by file inspection or first-hand command execution. No checkbox was found to overstate the code state.
-- **Phase 6 (tasks 6.1-6.8, 8 tasks)**: all unchecked, correctly so. Task 6.8 is a **BLOCKING user sign-off** and remains **OUTSTANDING**. It is being handled separately by the orchestrator via live browser testing and was deliberately excluded from this verification.
+25/25 tasks checked, 0 pending.
 
-## 6. Scope Boundary — Undeclared File Changes
+- **Phases 1-5 (1.1-5.3, 16 tasks)**: independently corroborated by file inspection or first-hand command execution. Tasks 4.1 and 4.2 were executed exactly as scoped — `git show 2d28bb7 -- CLAUDE.md openspec/config.yaml` shows a one-line stack-string edit in each file and nothing else.
+- **Phase 6 (6.1-6.8, 8 tasks)**: now checked, backed by the sign-off block in `tasks.md`: *"User sign-off (2026-08-10): confirmed all of 6.1-6.7 passed, including login + protected-route write (created an exercise) after the `trustHost: true` fix in `src/auth.config.ts`."* Task 6.8's blocking condition is satisfied.
 
-`git diff --stat` against the working tree shows 10 modified tracked files plus the untracked `openspec/changes/` artifact directory. Cross-referenced against the design's "File Changes" table:
+## 6. The `trustHost: true` fix — root-cause analysis
 
-| File | Declared? | Assessment |
-|---|---|---|
-| `package.json` | Yes | Expected |
-| `pnpm-lock.yaml` | Yes | Expected (3016 lines; excluded from the review budget per the recorded user decision) |
-| `src/app/(routes)/workouts/[slug]/page.tsx` | Yes | Expected |
-| `src/app/(routes)/exercises/update/[id]/page.tsx` | Yes | Expected |
-| `src/components/ui/calendar.tsx` | Yes | Expected |
-| `src/components/workout/SummaryWorkoutForm.tsx` | Yes | Expected |
-| `openspec/config.yaml` | Yes | Expected — stack line only |
-| `CLAUDE.md` | Yes | Expected — stack line only |
-| `tsconfig.json` | **No** | **ACCEPT** — see W-1 |
-| `src/actions/workout/get-workouts.ts` | **No** | **QUESTION** — see W-2 |
+This is the one substantive change not covered by the prior report, so I traced it to source rather than accepting the commit message.
 
-No other undeclared file changes were found. `src/middleware.ts` and `src/auth.config.ts` are untouched, as the design required.
+`@auth/core` derives the default in `lib/utils/env.js`:
+
+```js
+config.trustHost ?? (config.trustHost = !!(envObject.AUTH_URL ??
+    envObject.AUTH_TRUST_HOST ??
+    envObject.VERCEL ??
+    envObject.CF_PAGES ??
+    envObject.NODE_ENV !== "production"));
+```
+
+With `pnpm start` (`NODE_ENV=production`) and none of `AUTH_URL` / `AUTH_TRUST_HOST` / `VERCEL` / `CF_PAGES` set locally, `trustHost` resolves to `false` and `assertConfig` returns `UntrustedHost: Host must be trusted`. That exactly matches the failure the user hit during Phase 6, so the fix addresses a real, reproducible defect.
+
+**Critical finding about attribution**: this logic is byte-identical in `@auth/core@0.34.2` (the version behind the pre-upgrade `next-auth@5.0.0-beta.20`) — I read both files. **The `UntrustedHost` failure is therefore pre-existing and would have reproduced identically on the Next 14 / React 18 baseline.** It is not a Next 15 / React 19 regression. Two consequences:
+
+1. **Good news for the change's core risk gate.** The whole change was structured to isolate `nextauthjs/next-auth#11006` — `next-auth@5-beta` middleware breaking under Next 15 / React 19. The one auth failure observed during Phase 6 was *not* #11006-shaped and was not caused by the upgrade. Combined with zero `next-auth` output in the build and a confirmed successful login plus authenticated write, the #11006 risk is **not realised**. No rollback trigger fired.
+2. **The fix is out-of-scope for this change.** See W-6.
 
 ## Issues
 
@@ -146,68 +140,63 @@ None.
 
 ### WARNING
 
-**W-1 — `tsconfig.json` gained `"target": "ES2017"` (undeclared, but legitimate; recommend accepting).**
-This is not hand-authored scope creep. Next.js writes it itself: `node_modules/next/dist/lib/typescript/writeConfigurationDefaults.js:79` declares `suggested: 'ES2017'`, and Next appends suggested keys to `compilerOptions` on `next build`/`next dev`. The placement — appended after `paths`, at the end of the block — matches that generator, and the pre-upgrade `tsconfig.json` had no `target` key at all. Re-running `pnpm build` during this verification produced **no further tsconfig mutation**, confirming the file is now convergent with Next 15's defaults. It is a direct consequence of the Phase 5.3 build gate. *Action: declare it in the design's File Changes table (or accept as tool-generated) — do not revert, it will just be rewritten.*
+**W-6 (NEW) — `trustHost: true` is an undeclared source edit to a file both the proposal and design explicitly marked "no edits", and it is broader than the problem required.**
 
-**W-2 — `src/actions/workout/get-workouts.ts` gained a `WorkoutWithSets` Prisma payload type that the current gates do not require.**
-The change is behavior-neutral (a pure type annotation on a `.map()` callback), so it carries no runtime risk. However, I empirically tested whether it is load-bearing: I restored the pre-upgrade version of the file alongside the current one (export renamed to avoid a collision) and ran `pnpm exec tsc --noEmit`. It **compiled cleanly with zero errors**, then I removed the probe. So the un-annotated `allWorkouts.map((workout) => …)` type-checks fine under React 19 / Next 15 / TS 5.4.5 as the tree stands today. The annotation may have been necessary at some intermediate moment during apply (e.g. before `prisma generate` had run), but it is **not necessary now**. It is therefore an undeclared, currently-redundant edit. *Action: either revert it to keep the change minimal and single-revert-safe, or explicitly accept it as a harmless carry-over. Not a blocker either way.* Secondary nit: the added type literal's indentation is malformed (misaligned closing braces) even though it is syntactically balanced.
+Both artifacts pin `src/middleware.ts` and `src/auth.config.ts` as *Verify* rows — proposal Affected Areas: "No edits planned; runtime-verified only"; design File Changes: "Verify | No edits; runtime-verified only". The proposal's Out of Scope also states "Any product-behavior change; UI and auth semantics MUST stay identical". Commit `18898a3` edits `authConfig` anyway.
 
-**W-3 — `eslint` was bumped `^8` → `9.39.5`, which the design's dependency matrix never declared.**
-The design lists the codemod as moving `next`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `eslint-config-next` — not `eslint` itself. A major-version bump of the linter arrived silently. It currently works because `.eslintrc.json` is retained and `next lint` runs ESLint in eslintrc-compat mode; `pnpm lint` exits 0. But ESLint 9 defaults to flat config, and Next 15.5 already prints `next lint is deprecated and will be removed in Next.js 16`. Once `next lint` disappears in the follow-up `nextjs-16-upgrade`, this repo will be on ESLint 9 with only an eslintrc file — the flat-config migration deferred by R6 becomes **mandatory** in that change, not optional. *Action: record this as a hard prerequisite in the future `nextjs-16-upgrade` proposal.*
+Three separate concerns, in descending importance:
 
-**W-4 — `package.json` gained a root-level `"overrides"` field that pnpm ignores.**
-`{"overrides": {"@types/react": "19.2.18", "@types/react-dom": "19.2.4"}}` is npm/yarn syntax. pnpm reads `pnpm.overrides`, and the lockfile confirms it was **not** honored: there is no top-level `overrides:` block in `pnpm-lock.yaml`. The field is currently inert and harmless — both types are already pinned exactly in `devDependencies`, so the intended effect is achieved anyway — but it is dead configuration that would mislead a reader and would suddenly activate under npm. *Action: either remove it or convert it to `pnpm.overrides` for honesty.*
+1. **Security surface.** `trustHost: true` unconditionally accepts the incoming `Host` / `X-Forwarded-Host` header for all environments, permanently disabling Auth.js's host assertion. The narrower, standard remedy is an env var — `AUTH_TRUST_HOST=true` in the gitignored local `.env`, or `AUTH_URL` in production — which fixes local `pnpm start` with **zero** source change and **zero** production-behavior change. The current fix is a global, permanent widening to solve a local-only symptom.
+2. **It is a no-op where the app actually runs.** This app deploys on Vercel (`VERCEL` is set in that environment), so `trustHost` already resolved to `true` there. The hardcoded value changes nothing on Vercel and only takes effect on self-hosted / proxied deployments — precisely the deployments where host validation matters most.
+3. **Attribution.** As shown in §6, the underlying defect is pre-existing, not upgrade-caused. Landing a pre-existing auth-config fix inside a "no product-behavior change" upgrade weakens the change's single-revert story: `git revert 18898a3` and `git revert 2d28bb7` are now two independent decisions rather than one.
 
-**W-5 — `CLAUDE.md` still documents `next-auth` `5.0.0-beta.20` while the manifest pins `5.0.0-beta.32`.**
-Confirmed independently: `CLAUDE.md` line 8 reads ``- **Auth**: Next-Auth 5 (`5.0.0-beta.20`, Credentials provider, middleware-protected routes).`` while `package.json` and `pnpm-lock.yaml` both carry `5.0.0-beta.32`. This exactly matches the Judgment Day info note. Task 4.2 scoped the edit to the stack line only, so the apply phase followed instructions literally and the drift is a task-scoping artifact, not an execution defect. It is documentation-only, with zero runtime effect. *Action: one-line fix, ideally folded into `sdd-archive`.*
+*Recommended action (user decision, not a blocker):* replace the source line with `AUTH_TRUST_HOST=true` in the local `.env` (and `.env.template`), or keep the line and explicitly amend the design's File Changes table plus the proposal's Out-of-Scope statement so the artifact trail stops contradicting the code. Do **not** archive with the contradiction silently unresolved.
+
+**W-7 (NEW) — the PR against `origin/master` carries two commits that are not part of this change.**
+
+`origin/master` is at `f3a9cd1`; the branch is five commits ahead, but only three belong to `nextjs-15-upgrade`. The other two — `08e9a67` (CLAUDE.md / `design/` convention) and `c8027c7` (`openspec/` bootstrap) — were unpushed local commits that got swept into PR #1. Effect on the reviewer: `CLAUDE.md` appears as **+122 (new file)** and `openspec/config.yaml` as **+66 (new file)**, which flatly contradicts the design's description of them as one-line stack-string edits. The actual upgrade edit to each is one line (verified via `git show 2d28bb7`). *Action: either say so in the PR description or land the bootstrap commits on `master` separately first.*
+
+**W-1 (carried, unresolved) — `tsconfig.json` gained `"target": "ES2017"` (undeclared, but tool-generated; recommend accepting).** Next.js writes this itself (`node_modules/next/dist/lib/typescript/writeConfigurationDefaults.js` declares `suggested: 'ES2017'`) and appends it to `compilerOptions` on build. Re-running `pnpm build` during this verification produced no further tsconfig mutation, so the file is convergent. Reverting it just makes Next rewrite it. *Action: declare it in the design's File Changes table or accept as tool-generated.*
+
+**W-2 (carried, unresolved) — `src/actions/workout/get-workouts.ts` gained a `WorkoutWithSets` Prisma payload type that the current gates do not require.** Behavior-neutral (a type annotation on a `.map()` callback). The prior verification empirically proved it is not load-bearing: restoring the pre-upgrade version alongside and re-running `tsc --noEmit` compiled clean. Still present in the current tree, and the type literal's indentation is still malformed (misaligned closing braces, though syntactically balanced). *Action: revert for a minimal diff, or explicitly accept. Not a blocker.*
+
+**W-3 (carried, unresolved) — `eslint` was bumped `^8` → `9.39.5`, which the design's dependency matrix never declared.** The design lists the codemod as moving `next`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `eslint-config-next` — not `eslint` itself. It works today only because `.eslintrc.json` is retained and `next lint` runs ESLint in eslintrc-compat mode. This verification's lint run reproduced the `next lint is deprecated and will be removed in Next.js 16` notice. Once `next lint` disappears, this repo is on ESLint 9 with only an eslintrc file, so the flat-config migration deferred by R6 becomes **mandatory** in `nextjs-16-upgrade`. *Action: record as a hard prerequisite in that change's proposal.*
+
+**W-4 (carried, unresolved) — `package.json` gained a root-level `"overrides"` field that pnpm ignores.** `{"overrides": {"@types/react": "19.2.18", "@types/react-dom": "19.2.4"}}` is npm/yarn syntax; pnpm reads `pnpm.overrides`, and the lockfile confirms it was not honored. Inert today (both types are already pinned exactly in `devDependencies`), but it is dead configuration that would mislead a reader and would activate under npm. *Action: remove it, or convert to `pnpm.overrides`.*
+
+**W-5 (carried, unresolved) — `CLAUDE.md` still documents `next-auth` `5.0.0-beta.20` while the manifest pins `5.0.0-beta.32`.** Confirmed again: `CLAUDE.md:10` reads ``5.0.0-beta.20``; `package.json` and `pnpm-lock.yaml` both carry `5.0.0-beta.32`. Task 4.2 scoped the edit to the stack line only, so this is a task-scoping artifact, not an execution defect. Documentation-only, zero runtime effect. *Action: one-line fix, fold into `sdd-archive`.*
 
 ### SUGGESTION
 
-**S-1 — JD-003 (calendar vs. Tailwind 3.4) is real but cosmetic and confined to unused surfaces.** I checked the compiled stylesheet (`.next/static/css/88c655566a561a79.css`) rather than reasoning from the source:
-- `h-[--cell-size]`, `w-[--cell-size]`, `min-w-[--cell-size]`, `size-[--cell-size]`, `px-[--cell-size]` **do compile correctly** under Tailwind 3.4.3 — the CSS contains `height:var(--cell-size)`, `min-width:var(--cell-size)`, etc. Tailwind 3.3+ already supports the bare-custom-property arbitrary-value shorthand, so the biggest sizing concern is a non-issue.
-- `shadow-xs` (a Tailwind v4-only rename of v3's `shadow-sm`) produces **0 rules** — silently dropped. It appears only on `dropdown_root`, which renders only when `captionLayout="dropdown"`. The consumer uses the default `captionLayout="label"`, so it never renders.
-- The two `rtl:**:[.rdp-button\_*>svg]:rotate-180` classes produce **0 rules** — the `**:` descendant variant is Tailwind v4-only. This affects RTL chevron mirroring only; the app is LTR.
-- `has-focus:` (also v4-only) produces **0 rules**, again only on the unrendered `dropdown_root`.
+**S-1 (carried) — JD-003 (calendar utilities vs. Tailwind 3.4) is real but cosmetic and confined to unrendered surfaces.** Verified previously against the compiled stylesheet, and the calendar source is unchanged since: `h-[--cell-size]` / `w-[--cell-size]` / `min-w-[--cell-size]` / `size-[--cell-size]` / `px-[--cell-size]` compile correctly under Tailwind 3.4 (bare-custom-property arbitrary values are supported since 3.3). `shadow-xs` and `has-focus:` are Tailwind-v4-only and drop silently, but appear only on `dropdown_root`, which renders only when `captionLayout="dropdown"` — and the consumer uses the default `"label"`. The two `rtl:**:[.rdp-button\_*>svg]:rotate-180` classes also drop (v4-only `**:` variant) and affect RTL chevron mirroring only; the app is LTR. Phase 6.6 confirmed the popover works. No functional regression.
 
-Net: the uncorroborated single-judge finding is factually accurate about v4-only utilities being present, but the impact is confined to a caption layout this app never renders and to RTL support it does not use. No functional regression is expected. Phase 6.6 should still eyeball the popover.
+**S-2 (carried) — `package.json` was reformatted from tabs to 2-space indentation by the codemod**, turning a ~10-line semantic change into a 106-line diff and diverging from the tab indentation used across `src/`. Purely cosmetic; worth a line in the PR description so reviewers read the diff semantically.
 
-**S-2 — `package.json` was reformatted from tabs to 2-space indentation by the codemod**, turning a ~10-line semantic change into a 106-line diff. Purely cosmetic, but it inflates reviewer load and diverges from the tab indentation used across `src/`. Worth a note in the PR description so reviewers know to read the diff semantically.
+**S-3 (carried) — `next`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `eslint`, `eslint-config-next` are now exact pins** (previously `^` ranges). Only `next-auth` was specified to be exact; the codemod pinned the whole matrix. Arguably desirable for reproducibility, but it is an undeclared policy shift, and future patch releases now require manual bumps.
 
-**S-3 — `next`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `eslint`, `eslint-config-next` are now exact pins** (previously `^` ranges). Only `next-auth` was specified to be an exact pin; the codemod pinned the whole matrix. This is arguably desirable for reproducibility, but it is an undeclared policy shift and future patch releases will now require manual bumps.
+**S-4 (NEW) — run `pnpm store prune`** to clear the stale `next-auth@5.0.0-beta.20` / `react@18.3.1` directories still sitting in `node_modules/.pnpm/`. Harmless (unreferenced by the lockfile) but it makes `ls node_modules/.pnpm` misleading during future audits.
 
-## Judgment Day Cross-Check
+## Review Workload
 
-`judgment-day-feedback.md` reports `target_identity: 2fcd81f819f30e5e2d613d9446f55d771313faa4a905bc7d318ac8bd8f786e94`. Recomputing `git diff | sha256sum` against the current working tree yields the **identical** hash, so nothing changed between the Judgment Day review and this verification — the two passes inspected exactly the same bytes.
-
-| JD item | Independently observed? |
+| Metric | Value |
 |---|---|
-| `terminal_state: approved`, zero corroborated BLOCKER/CRITICAL | **Confirmed** — this verification also found zero CRITICAL |
-| JD-003 (Tailwind 3.4 vs. calendar utilities, single judge) | **Confirmed as real but narrower than feared** — see S-1; compiled-CSS evidence shows the sizing utilities work and only unused-surface utilities drop |
-| Info: React 19 paired with React-18 peer ranges | **Confirmed** — Radix, `cmdk`, `react-hook-form` declare peers through React 18; `autoInstallPeers: true` in the lockfile means pnpm resolved them as warnings, not failures. Phase 6 browser validation of forms, dialogs, popovers, selects and toasts remains the required evidence |
-| Info: stale `next-auth` version string in CLAUDE.md | **Confirmed** — see W-5; the described `beta.20` vs `beta.32` inconsistency genuinely exists and is informational only |
-| `fix_work_units: []` | **Consistent** — no fix work unit is required to unblock; W-1..W-5 are all non-blocking |
+| Authored changed lines (excl. `pnpm-lock.yaml` and `openspec/changes/`) | 377 (274 additions + 103 deletions) |
+| Injected budget for this change | 800 |
+| Default budget | 400 |
+| Verdict | Within budget on both counts. Single PR remains correct; no chained-PR split needed. |
 
-Judgment Day also reported "the ten tracked files listed in the reviewed diff", which matches the ten modified tracked files observed here — so JD saw `tsconfig.json` and `get-workouts.ts` too and did not flag them as defects.
+`pnpm-lock.yaml` (3016 changed lines) is excluded per the recorded user decision treating it as generated/mechanical.
 
 ## Verdict
 
-**Phases 1-5: PASS WITH WARNINGS. Change overall: verification INCOMPLETE (envelope `fail`) pending Phase 6.**
+**PASS WITH WARNINGS.**
 
-Every gate declared by the design's Testing Strategy passes with first-hand evidence: type-check exit 0 with empty output, lint exit 0 with a single pre-existing warning, build exit 0 producing all 14 routes and a 125 kB middleware bundle. The dependency contract, both async-params sites, the calendar migration, and all six non-goals are verified against actual file contents rather than checkbox state.
+All 25 tasks are complete and independently corroborated. All 6 spec requirements and all 9 scenarios are satisfied. Every gate declared by the design's Testing Strategy passes with first-hand evidence: type-check exit 0 with empty output, lint exit 0 with a single pre-existing warning, build exit 0 emitting all 14 routes and a 125 kB middleware bundle with zero `next-auth` output. The Phase 6 blocking sign-off that made the prior report `fail` is now recorded and dated.
 
-- **0 CRITICAL** — no implementation defect was found, and nothing here warrants returning to `sdd-apply`.
-- **5 WARNING** — W-1 through W-5; none blocks archive on its own.
-- **3 SUGGESTION** — S-1 through S-3.
-- **1 blocker** — the outstanding Phase 6 manual sign-off, which is a process gate the spec mandates, not a code defect.
+The change's core risk — `next-auth@5-beta` middleware breaking under Next 15 / React 19 (`nextauthjs/next-auth#11006`) — did **not** materialise. The one auth failure encountered during Phase 6 was traced to a pre-existing `trustHost` default that behaves identically on the pre-upgrade baseline, so no rollback trigger fired.
 
-## OUTSTANDING — Phase 6 (handled separately, NOT closed by this report)
+- **0 CRITICAL** — nothing blocks archive; nothing warrants returning to `sdd-apply`.
+- **7 WARNING** — W-1 through W-7. W-6 (`trustHost`) is the one that deserves a deliberate user decision before archive, because the code currently contradicts both the proposal and the design and because an env-var remedy is strictly narrower. It is a documentation-and-scope contradiction plus a security-hardening question, not a defect.
+- **4 SUGGESTION** — S-1 through S-4.
 
-Spec Requirement "Manual Verification Checklist (No Automated Test Runner)" and its scenario "Manual sign-off blocks archive" are **not satisfied**. Tasks 6.1-6.8 remain unchecked, and **6.8 is an explicit blocking user sign-off**. Static gates explicitly do NOT substitute for it.
-
-`sdd-archive` MUST NOT run until:
-1. 6.2-6.7 are exercised against a running instance (`docker compose up -d`, `pnpm build && pnpm start`, clean/incognito profile), and
-2. the user explicitly confirms 6.8.
-
-The highest-residual risk remains the one the whole change was structured to isolate: `next-auth@5.0.0-beta.32` middleware behavior under Next 15 / React 19 (`nextauthjs/next-auth#11006`). Static evidence is encouraging — the middleware bundles, `/api/auth/[...nextauth]` is emitted, and no `next-auth` warning or stack appears anywhere in the build output — but a #11006-shaped failure (middleware throwing, `auth?.user` always falsy, an infinite `/auth/login ↔ /dashboard` loop) is only observable at runtime. Per the recorded user decision, an auth-checkpoint failure triggers a **full revert of the whole change**, not a fix-forward and not a different beta pin.
-
-Also worth exercising during Phase 6, given the React-18 peer ranges: dialogs, selects, toasts, and the command palette (`cmdk`), not just the calendar popover.
+**Recommended next phase**: `sdd-archive`, after deciding W-6 and folding the one-line W-5 doc fix into the archive step.

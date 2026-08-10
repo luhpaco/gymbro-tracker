@@ -7,7 +7,7 @@ Source of truth for how the user, Claude Code, and OpenCode collaborate on this 
 - **What**: workout tracking app.
 - **Stack**: Next.js 15.x (App Router with RSC), React 19, TypeScript 5 (strict), pnpm.
 - **Database**: PostgreSQL 15.3 via Docker Compose, Prisma ORM 5.16.1.
-- **Auth**: Next-Auth 5 (`5.0.0-beta.20`, Credentials provider, middleware-protected routes).
+- **Auth**: Next-Auth 5 (`5.0.0-beta.32`, Credentials provider, middleware-protected routes).
 - **UI**: Tailwind CSS 3.4, shadcn/ui (Radix UI primitives), `class-variance-authority`, `lucide-react`, `react-icons`.
 - **Forms / validation**: React Hook Form + Zod.
 - **State**: Zustand (exercise, workout, UI stores).

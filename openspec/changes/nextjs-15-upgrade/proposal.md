@@ -17,6 +17,7 @@ This change takes the **14 → 15** hop only and stops at a live verification ch
 - `react-day-picker` v8 → latest stable major, migrating `src/components/ui/calendar.tsx` (v8 `classNames`/`IconLeft`/`IconRight` API is removed) and its consumer `src/components/workout/SummaryWorkoutForm.tsx`
 - Lockfile refresh for Radix UI, `cmdk`, `react-hook-form` (already React-19-compatible; no `package.json` range edits)
 - Live verification that `src/middleware.ts` + `src/auth.config.ts` still gate and redirect correctly — the change's core risk gate
+- Permanent `trustHost: true` in `src/auth.config.ts` for production hosts that cannot be inferred by Auth.js
 
 ### Out of Scope (deferred to `nextjs-16-upgrade`)
 
@@ -25,6 +26,7 @@ This change takes the **14 → 15** hop only and stops at a live verification ch
 - `next lint` removal / ESLint flat-config migration
 - Node.js 20.9+ pin (`.nvmrc` / `engines`)
 - Any product-behavior change; UI and auth semantics MUST stay identical
+- A local-only `AUTH_TRUST_HOST=true` environment override; it would be a no-op on Vercel because `VERCEL` already enables Auth.js host trust
 
 ## Capabilities
 
@@ -42,6 +44,7 @@ This change takes the **14 → 15** hop only and stops at a live verification ch
 2. Run the official `next-async-request-api` codemod, then hand-review both `params` sites (`await params` before use, `Props.params` becomes a `Promise`).
 3. Migrate `calendar.tsx` to the new `react-day-picker` class/component API and re-check `SummaryWorkoutForm`'s `mode='single'` + `selected` binding.
 4. Gate on `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm build`, then a manual runtime pass on auth.
+5. Keep `trustHost: true` as the permanent configuration decision. The `UntrustedHost` failure is pre-existing in `@auth/core` rather than a Next 15 regression: the default logic is materially the same in `@auth/core` 0.34.2 and 0.41.3. The explicit setting is required for the planned Docker deployment, where neither Vercel nor another trusted-host environment signal is present.
 
 ## Affected Areas
 
@@ -52,7 +55,8 @@ This change takes the **14 → 15** hop only and stops at a live verification ch
 | `src/app/(routes)/exercises/update/[id]/page.tsx` | Modified | `await params` |
 | `src/components/ui/calendar.tsx` | Modified | react-day-picker major API migration |
 | `src/components/workout/SummaryWorkoutForm.tsx` | Modified | Calendar prop compatibility |
-| `src/middleware.ts`, `src/auth.config.ts` | Verified | No edits planned; runtime-verified only |
+| `src/middleware.ts` | Verified | Runtime-verified only |
+| `src/auth.config.ts` | Modified | Permanent `trustHost: true` for production host validation in local and planned Docker deployments |
 | `openspec/config.yaml`, `CLAUDE.md` | Modified | Stack context strings |
 
 ## Risks

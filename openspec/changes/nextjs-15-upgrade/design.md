@@ -39,6 +39,14 @@ Consumer mapping in `SummaryWorkoutForm.tsx`: `mode='single'`, `selected={field.
 
 **Alternatives considered**: hand-porting the v8 `classNames` map. Rejected — the key set changed wholesale and shadcn maintains the mapping in lockstep with react-day-picker releases.
 
+### Decision: Permanently configure Auth.js to trust the application host
+
+**Choice**: retain `trustHost: true` in `src/auth.config.ts` (commit `18898a3`).
+
+**Rationale**: production startup exposed `UntrustedHost: Host must be trusted`. Comparing `@auth/core` 0.34.2 with 0.41.3 found the same trust-host default behavior, so this is pre-existing behavior and not a regression from the Next 15 / React 19 upgrade. `AUTH_TRUST_HOST=true` was rejected as a local-only remedy: Vercel already sets `VERCEL`, which makes it a no-op there. The explicit setting also supports the planned Docker deployment, where that deployment signal is absent.
+
+**Alternatives considered**: `AUTH_TRUST_HOST=true` in local environment configuration. Rejected because it does not establish the required Docker production behavior and does not change Vercel's already-trusted behavior.
+
 ## Data Flow — auth gate (unchanged; this is the invariant under test)
 
 ```
@@ -65,7 +73,8 @@ Note: `LoginForm` lands on `/dashboard` via `window.location.replace`; the `orig
 | `src/app/(routes)/exercises/update/[id]/page.tsx` | Modify | `params: Promise<…>`, `await params` |
 | `src/components/ui/calendar.tsx` | Modify | Overwritten from shadcn registry (v9) |
 | `src/components/workout/SummaryWorkoutForm.tsx` | Modify | `initialFocus` → `autoFocus` |
-| `src/middleware.ts`, `src/auth.config.ts` | Verify | No edits; runtime-verified only |
+| `src/middleware.ts` | Verify | Runtime-verified only |
+| `src/auth.config.ts` | Modify | Retain permanent `trustHost: true` (commit `18898a3`) for Auth.js host trust outside Vercel, including planned Docker deployment |
 | `openspec/config.yaml`, `CLAUDE.md` | Modify | Stack context strings |
 
 ## Testing Strategy (no runner — gates are the test suite)
@@ -94,7 +103,7 @@ N/A — no routing-policy, shell, subprocess, VCS/PR-automation, or executable-c
 
 ## Migration / Rollout
 
-No data migration. Rollback is a single `git revert <sha>` (or `git checkout master -- package.json pnpm-lock.yaml` pre-commit) followed by `pnpm install --frozen-lockfile`. Because no Prisma migration, schema edit, env var, or persisted state is touched, revert restores 14.2.3 / React 18 exactly. Per the user's decision, an auth-checkpoint failure reverts the **whole** change; do not fall back to another `next-auth` beta.
+No data migration. Rollback is a single `git revert <sha>` (or `git checkout master -- package.json pnpm-lock.yaml` pre-commit) followed by `pnpm install --frozen-lockfile`. Because no Prisma migration, schema edit, env var, or persisted state is touched, revert restores 14.2.3 / React 18 exactly. Per the user's decision, an auth-checkpoint failure reverts the **whole** change; do not fall back to another `next-auth` beta. `trustHost: true` is a deliberate independent configuration decision retained in the upgrade branch for the planned Docker deployment.
 
 ## Open Questions
 
