@@ -13,16 +13,17 @@ import { WorkoutDetail } from "@/interfaces";
 import { notFound, redirect } from "next/navigation";
 
 interface Props {
-	params: {
+	params: Promise<{
 		slug: string;
-	};
+	}>;
 }
 
 export default async function WorkoutDetailPage({ params }: Props) {
+	const { slug } = await params;
 	const session = await auth();
 	if (!session) return redirect("/login");
 	const workoutDetail = (await getWorkoutBySlug(
-		decodeURIComponent(params.slug),
+		decodeURIComponent(slug),
 		session.user.id
 	)) as WorkoutDetail;
 
