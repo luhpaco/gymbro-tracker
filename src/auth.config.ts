@@ -15,6 +15,7 @@ const protectedRoutes = [
 const authenticatedRoutes = ["/auth/login", "/auth/register"];
 
 export const authConfig: NextAuthConfig = {
+	trustHost: true,
 	pages: {
 		signIn: "/auth/login",
 		newUser: "auth/register",
