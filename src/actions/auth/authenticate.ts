@@ -1,7 +1,7 @@
 "use server";
 
 import { LoginFormValues } from "@/app/auth/login/ui/LoginForm";
-import { signIn } from "@/auth.config";
+import { signIn } from "@/auth";
 import { FormState } from "react-hook-form";
 
 export async function authenticate(

@@ -2,6 +2,22 @@
 
 import { DataItem, GroupedData } from "@/interfaces";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+type WorkoutWithSets = Prisma.WorkoutGetPayload<{
+	include: {
+		sets: {
+			include: {
+				exercise: {
+					select: {
+						name: true;
+					};
+					};
+				};
+			};
+		};
+	}
+>;
 
 interface GetWorkouts {
 	skip?: number;
@@ -40,7 +56,7 @@ export const getWorkouts = async ({
 				},
 			},
 		});
-		const arrWorkouts = allWorkouts.map((workout) => ({
+		const arrWorkouts = allWorkouts.map((workout: WorkoutWithSets) => ({
 			id: workout.id,
 			name: workout.name,
 			date: workout.date,
