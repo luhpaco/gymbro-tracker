@@ -2,7 +2,7 @@
 
 ## Technical Approach
 
-Use a gated workflow: the user provisions Supabase Free, enters Vercel secrets, and privately runs migration. Runtime uses transaction pooling; migration uses a session-mode URL. A user-confirmed scope audit classifies the secret-shaped `.env.template` literal as a safe placeholder that was never used as a real secret, so no rotation is required. Success gates Preview deployment, fresh-session smoke evidence, and read-only PR #1 assessment.
+Use a gated workflow: the user provisions Supabase Free, enters Vercel secrets, and privately runs migration. Runtime uses transaction pooling; migration uses a session-mode URL. A user-confirmed scope audit classifies the secret-shaped `.env.template` literal as a safe placeholder that was never used as a real secret, so no rotation is required. Corrective local validation adds a deterministic zero-I/O migration-failure harness. PR #1 is already merged, but the original assessment remains recorded as agent-read-only.
 
 ## Architecture Decisions
 
@@ -12,6 +12,7 @@ Use a gated workflow: the user provisions Supabase Free, enters Vercel secrets, 
 | Human migration vs build migration | Manual checkpoint instead of automatic convenience | Human-only. It prevents every Preview build from mutating the shared database and creates a hard stop on failure. |
 | One Vercel entry per key targeting both environments | Shared database/auth lifecycle | Proves scope and stable `AUTH_SECRET` without exposing values. |
 | Read-only PR assessment | Cannot fix or merge blockers | Chosen because PR mutation and Production launch are out of scope. |
+| Local simulated migration failure | Does not prove remote migration behavior | Chosen to prove the fail-closed continuation boundary without a database, environment input, or platform mutation. |
 
 ## Sequenced Flow
 
@@ -30,13 +31,15 @@ Use a gated workflow: the user provisions Supabase Free, enters Vercel secrets, 
 5. **Human checkpoint:** confirm the empty project, masked key/scope metadata, stable auth entry, and transaction mode. Record as an audit fact—without inspecting or reproducing template content—that the secret-shaped `.env.template` literal is a safe, never-used placeholder and requires no rotation.
 6. User privately injects the session-mode URL, runs only `pnpm exec prisma migrate deploy`, records sanitized exit evidence, unsets the variable, and closes the session. Failure halts; no retry, seed, rollback, or smoke follows.
 7. Deploy Preview and run registration → login → dashboard → exercises → workouts → logout in a new browser context. Exercise/workout pages validate protected empty states; never invoke `pnpm seed`, `/api/seed`, or reference-data create flows.
-8. Assess PR #1 with read-only metadata/check/diff commands. Current snapshot: OPEN/CLEAN, two successful checks, no review decision, 39 files and 4,939 changed lines; **not ready** because it exceeds the 800-line review budget and lacks approval. Do not merge or mutate it.
+8. Preserve the original PR #1 assessment as read-only with zero agent mutation. PR #1 is now merged as a later historical fact; do not attribute that merge to the original assessment or claim archive/verification success.
+9. Run the local deterministic failure harness. It simulates one migration failure without database access, environment reads, command execution, accepted input, connection I/O, or persistence; it proves acceptance and smoke do not start and no retry, seed, rewrite, or rollback occurs.
 
 ## File Changes
 
 | File | Action | Description |
 |---|---|---|
 | `package.json` | Modify during apply | Add only the Node engine declaration. |
+| `scripts/validate-migration-failure-guardrails.ts` | Add during corrective delivery | Deterministically proves the local failure-continuation boundary with no external I/O. |
 | `prisma/schema.prisma`, `prisma/migrations/`, `pnpm-lock.yaml`, `.gitignore`, `src/seed/`, `src/app/api/seed/route.ts` | Preserve | Baseline and post-change snapshots must match. |
 
 ## Evidence Contract
@@ -48,7 +51,7 @@ vercel: {node: 24.x, POSTGRES_URL_targets: [Preview, Production], AUTH_SECRET_ta
 migration: {operator: human, command: "pnpm exec prisma migrate deploy", mode: session, exit_code: 0, committed_migrations_applied: 9, raw_output_retained: false}
 deployment: {environment: Preview, status: READY, commit_sha: "<sha>", node_major: 24, build_migration: false, seed_run: false}
 smoke: {fresh_context: true, ordered_steps: [registration, login, dashboard, exercises, workouts, logout], result: pass, identity: disposable, credentials_retained: false}
-pr1: {state: OPEN, head_sha: "<sha>", checks: "<summary>", changed_lines: 4939, budget: 800, readiness: blocked, mutations: 0}
+pr1: {historical_assessment_state: OPEN, current_state: MERGED, original_agent_mutations: 0, changed_lines: 4939, budget: 800, corrective_verification: pending}
 ```
 
 Persist no secret values/hashes, hosts, project references, usernames, credentials, emails, raw logs, command history, or settings screenshots.
@@ -59,6 +62,7 @@ Persist no secret values/hashes, hosts, project references, usernames, credentia
 |---|---|
 | Static | Protected-path baseline, exact build script, `engines.node`, lint, and type-check checks. |
 | Build | `pnpm build` under Node 24; assert no migration or seed command. |
+| Local harness | Simulate one migration failure; assert acceptance/smoke halt and zero prohibited effects without database or environment access. |
 | Integration/E2E | Human migration receipt, READY deployment metadata, and ordered fresh-context smoke receipt. |
 
 ## Threat Matrix

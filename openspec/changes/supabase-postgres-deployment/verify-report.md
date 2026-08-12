@@ -16,9 +16,9 @@ build_output_hash: sha256:c6181094a53c48ed8ac98e3789a0f5f69a953419901544a02ba8c2
 
 ## Verification Report
 
-**Change**: supabase-postgres-deployment  
-**Version**: N/A  
-**Mode**: Standard (Strict TDD disabled; no project test runner configured)  
+**Change**: supabase-postgres-deployment
+**Version**: N/A
+**Mode**: Standard (Strict TDD disabled; no project test runner configured)
 **Verdict**: FAIL
 
 ### Completeness

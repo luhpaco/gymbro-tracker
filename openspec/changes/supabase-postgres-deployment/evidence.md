@@ -82,12 +82,12 @@
 - smoke_acceptance: accepted
 - prior_incomplete_smoke_receipt: superseded_by_latest_complete_pass
 
-## Final Acceptance and Rollback State
+## Historical Acceptance and Rollback State
 
 - change_scoped_protected_path_audit: pass
 - agent_introduced_protected_path_changes: false
 - secret_disclosure_detected: false
-- final_acceptance: accepted
+- historical_final_acceptance: accepted
 - rollback_boundary: available
 - rollback_status: not_invoked
 - automatic_down_migration_performed: false
@@ -99,11 +99,12 @@
 - retained_for_audit: true
 - values_or_logs_retained: false
 
-## PR #1 Read-Only Assessment (Sanitized)
+## PR #1 Historical Read-Only Assessment (Sanitized)
 
 - fixed_cwd: true
 - read_only_commands: view, checks, diff
-- pr_state: open
+- pr_state_at_original_assessment: open
+- pr_state_in_current_local_history: merged
 - changed_files: 39
 - changed_lines: 4939
 - review_budget_lines: 800
@@ -111,7 +112,7 @@
 - required_checks_reported: false
 - readiness: blocked
 - mutation_count: 0
-- merge_performed: false
+- original_assessment_agent_merge_performed: false
 
 ## Evidence Safety
 
@@ -121,3 +122,64 @@
 - command_history_retained: false
 - hostnames_retained: false
 - identities_retained: false
+
+## Corrective Delivery Evidence
+
+- corrective_scope_limited_to_authorized_files: true
+- package_node_engine: "24.x"
+- package_non_engine_changes: false
+- migration_failure_harness: passed
+- simulated_migration_attempts: 1
+- acceptance_continued_after_failure: false
+- smoke_continued_after_failure: false
+- retry_invoked: false
+- seed_invoked: false
+- migration_rewrite_invoked: false
+- rollback_invoked: false
+- connection_input_invoked: false
+- connection_output_invoked: false
+- connection_persistence_invoked: false
+- database_connection_attempted: false
+- environment_files_read: false
+- input_values_accepted: false
+- prisma_seed_or_migration_command_invoked: false
+- local_lint: unavailable_missing_local_dependencies
+- local_typecheck: unavailable_missing_local_dependencies
+- environment_dependent_build: not_run
+- native_settlement: not_run
+- corrective_verification: pending
+- archive: pending
+
+## Corrective Evidence Revision
+
+The following sanitized UTF-8 preimage, including its trailing newline, identifies this corrective local evidence. It retains no URLs, hosts, account data, environment values, secrets, or raw command output.
+
+```text
+schema=gymbro-tracker.corrective-evidence/v1
+change=supabase-postgres-deployment
+package_node_engine=24.x
+package_non_engine_changes=false
+migration_failure_harness=pass
+simulated_migration_attempts=1
+acceptance_continued=false
+smoke_continued=false
+retry=false
+seed=false
+migration_rewrite=false
+rollback=false
+connection_input=false
+connection_output=false
+connection_persistence=false
+database_connection_attempted=false
+environment_files_read=false
+input_values_accepted=false
+prisma_seed_or_migration_command_invoked=false
+lint=unavailable_missing_local_dependencies
+typecheck=unavailable_missing_local_dependencies
+build=not_run_environment_dependent
+corrective_verification=pending
+archive=pending
+native_settlement=not_run
+```
+
+- corrective_evidence_revision: sha256:881e46da3a2ac2eec84279d65c61ae0c8bab1d4ee27f8a618cf6ea813504810c

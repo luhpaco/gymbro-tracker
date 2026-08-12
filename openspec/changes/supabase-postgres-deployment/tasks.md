@@ -21,7 +21,7 @@ Chain strategy: pending
 
 | Unit | Goal | Likely PR | Focused test command | Runtime harness | Rollback boundary |
 |---|---|---|---|---|---|
-| 1 | Node declaration and sanitized acceptance evidence | Single PR | `pnpm lint && pnpm exec tsc --noEmit && pnpm build` | Fresh Preview sequence after human checkpoint | `package.json`, change evidence only |
+| 1 | Node declaration and sanitized acceptance evidence | Single PR | `pnpm lint && pnpm exec tsc --noEmit` | Fresh Preview sequence after human checkpoint | `package.json`, change evidence only |
 
 ## Phase 1: Guardrails and Evidence
 
@@ -46,3 +46,11 @@ Chain strategy: pending
 
 - [x] 4.1 **Agent:** Re-run scope audit and finalize `evidence.md`; acceptance requires every checklist gate and never exposes secrets or modifies protected paths.
 - [x] 4.2 **Human-only:** Before migration, remove external configuration/revert `package.json` and discard the empty project if needed; after migration, disable deployments/secrets and choose a forward fix—never down-migrate automatically.
+
+## Phase 5: Corrective Delivery
+
+- [x] 5.1 **Agent:** Add exactly `engines.node: "24.x"` to `package.json`, preserving every other package field and prohibited path.
+- [x] 5.2 **Agent:** Add and run a deterministic local TypeScript harness that simulates one migration failure; prove acceptance and smoke do not continue and retry, seed, migration rewrite, rollback, connection input, connection output, and connection persistence remain uninvoked. The harness MUST not connect to a database, read `.env*`, accept values, or call Prisma, seed, or migration commands.
+- [x] 5.3 **Agent:** Reconcile the copied proposal, specification, design, and tasks with the historical fact that PR #1 is already merged while preserving zero agent mutation during the original assessment.
+- [ ] 5.4 **Verification pending:** Independently verify the corrective delivery against the amended specification and issue a new sanitized verification report. Do not claim verification or archive success before this task is complete.
+- [ ] 5.5 **Archive pending:** Archive only after successful corrective verification and authorized settlement.

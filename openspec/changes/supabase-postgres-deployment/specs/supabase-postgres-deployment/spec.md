@@ -45,12 +45,13 @@ Before smoke acceptance, the user alone MUST run one `prisma migrate deploy` wit
 - THEN a successful command result satisfies the migration checkpoint
 - AND smoke acceptance MAY begin without retaining the connection URL
 
-#### Scenario: Migration fails
+#### Scenario: Simulated migration failure halts locally
 
 - GIVEN the migration checkpoint is in progress
-- WHEN `prisma migrate deploy` returns failure
+- WHEN the deterministic local harness simulates a migration failure
 - THEN acceptance and smoke execution MUST halt
-- AND automation MUST NOT retry, rewrite migrations, roll back, or disclose the URL
+- AND exactly one simulated attempt MUST occur
+- AND the harness MUST NOT retry, seed, rewrite migrations, roll back, or perform connection input, output, or persistence
 
 ### Requirement: Vercel Node.js 24 Configuration
 
@@ -92,13 +93,14 @@ After migration succeeds, Preview MUST pass registration, login, dashboard, exer
 - THEN Preview acceptance MUST fail
 - AND later successful steps MUST NOT substitute for the missing evidence
 
-### Requirement: Read-Only PR #1 Readiness Assessment
+### Requirement: Historical PR #1 Assessment Reconciliation
 
-PR #1 MUST receive a readiness assessment from its status, checks, and diff. It MUST report readiness and blockers without merging or mutating the PR. Production launch remains out of scope.
+The original PR #1 assessment MUST remain recorded as read-only with zero agent mutation. PR #1 is already merged as a historical fact outside that assessment; corrective artifacts MUST reconcile the state without claiming archive or verification success. Production launch remains out of scope.
 
-#### Scenario: Readiness is reported without mutation
+#### Scenario: Historical state is reconciled without attributing mutation
 
-- GIVEN PR #1 metadata and diff are readable
-- WHEN readiness is assessed
-- THEN the result identifies readiness and blockers
-- AND PR #1 remains unmerged and unchanged
+- GIVEN the original assessment recorded zero agent mutations
+- WHEN the corrective artifacts are updated after PR #1 is merged
+- THEN the artifacts identify the merged state as historical
+- AND they MUST NOT attribute the merge to an agent during the original assessment
+- AND they MUST NOT claim archive or verification success
