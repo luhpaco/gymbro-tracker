@@ -41,3 +41,4 @@ next-env.d.ts
 # Inter-agent scratch space (handoffs, drafts, session notes)
 # See design/README.md and CLAUDE.md for the convention.
 /design/
+.env*
