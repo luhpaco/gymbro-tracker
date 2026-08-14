@@ -49,7 +49,7 @@
 	h4,
 	h5,
 	h6 {
-		@apply font-bold;
+		@apply font-display uppercase tracking-wide;
 	}
 	h1 {
 		@apply text-2xl;
@@ -59,5 +59,153 @@
 	}
 	h3 {
 		@apply text-lg;
+	}
+}
+
+/*
+ * Athletic Tape & Wrap surface primitive.
+ *
+ * The torn edge is a real CSS `clip-path` polygon. X coordinates are `%` (tooth
+ * positions scale with width) while Y coordinates are `px` via `--tear`, so a
+ * 600px-tall strip and a 56px row share the same tooth depth — a pure-percentage
+ * polygon would stretch teeth into spikes on tall cards.
+ */
+@layer components {
+	/* Rotation wrapper: deterministic per-strip tilt, set via inline `--strip-rot`. */
+	.torn-strip-root {
+		transform: rotate(var(--strip-rot, 0deg));
+	}
+
+	/* Base torn surface (variant "a"): torn top and bottom, straight sides. */
+	.torn-strip {
+		--tear: 6px;
+		clip-path: polygon(
+			0 var(--tear),
+			6% 0,
+			14% calc(var(--tear) * 0.6),
+			23% 1px,
+			31% calc(var(--tear) * 0.85),
+			40% 0,
+			48% calc(var(--tear) * 0.5),
+			57% 1px,
+			66% calc(var(--tear) * 0.9),
+			75% 0,
+			84% calc(var(--tear) * 0.55),
+			92% 1px,
+			100% var(--tear),
+			100% calc(100% - var(--tear)),
+			92% 100%,
+			84% calc(100% - var(--tear) * 0.55),
+			75% calc(100% - 1px),
+			66% calc(100% - var(--tear) * 0.9),
+			57% 100%,
+			48% calc(100% - var(--tear) * 0.5),
+			40% calc(100% - 1px),
+			31% calc(100% - var(--tear) * 0.85),
+			23% 100%,
+			14% calc(100% - var(--tear) * 0.6),
+			6% calc(100% - 1px),
+			0 calc(100% - var(--tear))
+		);
+		/* drop-shadow (not box-shadow) so the silhouette follows the torn edge. */
+		filter: drop-shadow(0 2px 0 hsl(var(--background)));
+	}
+
+	/* Re-seeded polygon: variant "b". */
+	.torn-strip--b {
+		clip-path: polygon(
+			0 calc(var(--tear) * 0.8),
+			5% 1px,
+			12% 0,
+			21% calc(var(--tear) * 0.7),
+			29% 1px,
+			38% 0,
+			46% calc(var(--tear) * 0.9),
+			55% 1px,
+			64% calc(var(--tear) * 0.5),
+			72% 0,
+			81% calc(var(--tear) * 0.75),
+			90% 1px,
+			100% calc(var(--tear) * 0.8),
+			100% calc(100% - var(--tear) * 0.8),
+			90% 100%,
+			81% calc(100% - var(--tear) * 0.75),
+			72% calc(100% - 1px),
+			64% calc(100% - var(--tear) * 0.5),
+			55% 100%,
+			46% calc(100% - var(--tear) * 0.9),
+			38% calc(100% - 1px),
+			29% calc(100% - var(--tear) * 0.7),
+			21% 100%,
+			12% calc(100% - var(--tear) * 0.8),
+			5% calc(100% - 1px),
+			0 calc(100% - var(--tear) * 0.8)
+		);
+	}
+
+	/* Re-seeded polygon: variant "c". */
+	.torn-strip--c {
+		clip-path: polygon(
+			0 0,
+			8% calc(var(--tear) * 0.9),
+			17% 1px,
+			26% 0,
+			35% calc(var(--tear) * 0.6),
+			43% 1px,
+			52% 0,
+			60% calc(var(--tear) * 0.8),
+			69% 1px,
+			78% 0,
+			87% calc(var(--tear) * 0.65),
+			96% 1px,
+			100% 0,
+			100% calc(100% - var(--tear) * 0.9),
+			96% 100%,
+			87% calc(100% - var(--tear) * 0.65),
+			78% calc(100% - 1px),
+			69% calc(100% - var(--tear) * 0.8),
+			60% 100%,
+			52% calc(100% - 1px),
+			43% calc(100% - var(--tear) * 0.6),
+			35% 100%,
+			26% calc(100% - 1px),
+			17% calc(100% - var(--tear) * 0.9),
+			8% 100%,
+			0 calc(100% - var(--tear) * 0.9)
+		);
+	}
+
+	/* Straight top edge, torn bottom — for Header/Sidebar full-width bars. */
+	.torn-strip--edge-bottom {
+		clip-path: polygon(
+			0 0,
+			100% 0,
+			100% calc(100% - var(--tear)),
+			92% 100%,
+			84% calc(100% - var(--tear) * 0.55),
+			75% calc(100% - 1px),
+			66% calc(100% - var(--tear) * 0.9),
+			57% 100%,
+			48% calc(100% - var(--tear) * 0.5),
+			40% calc(100% - 1px),
+			31% calc(100% - var(--tear) * 0.85),
+			23% 100%,
+			14% calc(100% - var(--tear) * 0.6),
+			6% calc(100% - 1px),
+			0 calc(100% - var(--tear))
+		);
+	}
+
+	/* Dashed empty "pending" slot — no fill, no clip, signals an unfilled strip. */
+	.torn-strip--ghost {
+		background: transparent;
+		clip-path: none;
+		filter: none;
+		border: 2px dashed hsl(var(--border));
+	}
+
+	/* Fixed-region layout: internal churn cannot relayout ancestors. */
+	.reserved-region {
+		contain: layout paint;
 	}
 }
