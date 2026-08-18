@@ -40,16 +40,20 @@ export const useWorkoutStore = create<Workout>()((set, get) => ({
 	resetExercises: () => set({ exercises: [] }),
 	updateSet: (exerciseValue, setIndex, patch) => {
 		const { exercises } = get();
-		const updatedExercises = exercises.map((exercise) =>
-			exercise.exerciseValue === exerciseValue
-				? {
-						...exercise,
-						sets: exercise.sets.map((set, index) =>
-							index === setIndex ? { ...set, ...patch } : set
-						),
-				  }
-				: exercise
+		const exercise = exercises.find(
+			(exercise) => exercise.exerciseValue === exerciseValue
 		);
-		set({ exercises: updatedExercises });
+		if (!exercise) return;
+		const targetSet = exercise.sets[setIndex];
+		if (!targetSet) return;
+		// Mutate the existing set object's weight/reps fields in place.
+		if (patch.weight !== undefined) {
+			targetSet.weight = patch.weight;
+		}
+		if (patch.reps !== undefined) {
+			targetSet.reps = patch.reps;
+		}
+		// Publish a new outer snapshot so Zustand subscribers re-render.
+		set({ exercises: [...exercises] });
 	},
 }));

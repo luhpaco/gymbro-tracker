@@ -58,22 +58,20 @@ export const SummaryWorkout = () => {
 											(_, index) => {
 												if (index >= exercise.sets.length) {
 													return (
-														<li
-															key={index}
-															className='h-14 relative'
-														>
-															<div
-																aria-hidden
-																className='torn-strip--ghost absolute inset-0'
-															/>
-															<div className='relative h-full flex items-center justify-between px-4 py-2'>
-																<span className='text-xs text-muted-foreground'>
-																	Pendiente
-																</span>
-															</div>
-															<TornStrip.Tag>
-																Pendiente
-															</TornStrip.Tag>
+														<li key={index} className='h-14'>
+															<TornStrip
+																flat
+																className='torn-strip--ghost h-full flex items-center [&>span]:bg-transparent'
+															>
+																<div className='flex w-full items-center justify-between'>
+																	<span className='text-xs text-muted-foreground'>
+																		pending
+																	</span>
+																</div>
+																<TornStrip.Tag>
+																	pending
+																</TornStrip.Tag>
+															</TornStrip>
 														</li>
 													);
 												}
