@@ -66,7 +66,7 @@ Real file paths verified via Glob/Grep against the actual repo before writing ta
 
 #### Dashboard (PR 4/7)
 
-- [ ] `dashboard/page.tsx`: `ResumeCard` ×2 → `TornStrip` ×2. *(work-unit granularity)*
+- [x] `dashboard/page.tsx`: `ResumeCard` ×2 → `TornStrip` ×2. *(work-unit granularity)*
 
 #### Workout detail view (PR 5/7 — the acknowledged logic exception)
 
