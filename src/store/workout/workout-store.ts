@@ -14,6 +14,11 @@ interface Workout {
 	addExercise: (exercise: Exercise) => void;
 	removeExercise: (exerciseValue: string) => void;
 	resetExercises: () => void;
+	updateSet: (
+		exerciseValue: string,
+		setIndex: number,
+		patch: Partial<Exercise["sets"][number]>
+	) => void;
 }
 
 export const useWorkoutStore = create<Workout>()((set, get) => ({
@@ -33,4 +38,18 @@ export const useWorkoutStore = create<Workout>()((set, get) => ({
 		set({ exercises: updatedExercises });
 	},
 	resetExercises: () => set({ exercises: [] }),
+	updateSet: (exerciseValue, setIndex, patch) => {
+		const { exercises } = get();
+		const updatedExercises = exercises.map((exercise) =>
+			exercise.exerciseValue === exerciseValue
+				? {
+						...exercise,
+						sets: exercise.sets.map((set, index) =>
+							index === setIndex ? { ...set, ...patch } : set
+						),
+				  }
+				: exercise
+		);
+		set({ exercises: updatedExercises });
+	},
 }));
