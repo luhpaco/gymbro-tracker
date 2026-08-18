@@ -79,10 +79,10 @@ Satisfies: *Route-Level Card Consolidation*, *Full-App Token and Typography Appl
 
 ### 2D. Workout detail view — acknowledged logic exception (PR 5)
 
-- [ ] 2.15 Create `src/actions/workout/update-set.ts`: Zod-validated server action (reuse `setSchema` shape from `AddExerciseForm.tsx`) that updates one `Set` row's weight/reps for the current user's owned workout, then `revalidatePath` on the workout detail route. **This is the one authorized logic addition per the proposal's Acknowledged Exception — do not extend it to touch any other action, route, or model.**
-- [ ] 2.16 Create `src/components/workout/WorkoutDetailSets.tsx` (client component): renders the set list for a saved workout using `EditableStat`, `onCommit` wired to the new `update-set` action.
-- [ ] 2.17 `src/app/(routes)/workouts/[slug]/page.tsx`: replace the shadcn `Table` with one `TornStrip` per exercise containing `Stat`-based rows via `WorkoutDetailSets` (mobile-first — a 4-column table is unusable one-handed mid-set).
-- [ ] 2.18 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual: open a saved workout, edit a set inline, reload the page, confirm the new value persisted; submit an invalid value (e.g. negative weight) and confirm it stays in edit mode with `aria-invalid` and no server write. Confirm `git diff --stat` shows exactly `src/actions/workout/update-set.ts` as the only new file under `src/actions/` for the whole change.
+- [x] 2.15 Create `src/actions/workout/update-set.ts`: Zod-validated server action (reuse `setSchema` shape from `AddExerciseForm.tsx`) that updates one `Set` row's weight/reps for the current user's owned workout, then `revalidatePath` on the workout detail route. **This is the one authorized logic addition per the proposal's Acknowledged Exception — do not extend it to touch any other action, route, or model.**
+- [x] 2.16 Create `src/components/workout/WorkoutDetailSets.tsx` (client component): renders the set list for a saved workout using `EditableStat`, `onCommit` wired to the new `update-set` action.
+- [x] 2.17 `src/app/(routes)/workouts/[slug]/page.tsx`: replace the shadcn `Table` with one `TornStrip` per exercise containing `Stat`-based rows via `WorkoutDetailSets` (mobile-first — a 4-column table is unusable one-handed mid-set).
+- [x] 2.18 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual: open a saved workout, edit a set inline, reload the page, confirm the new value persisted; submit an invalid value (e.g. negative weight) and confirm it stays in edit mode with `aria-invalid` and no server write. Confirm `git diff --stat` shows exactly `src/actions/workout/update-set.ts` as the only new file under `src/actions/` for the whole change.
 
 Satisfies: *Inline Edit in Workout Detail View*; proposal's Acknowledged Exception; success criterion on `src/actions/` diff scope.
 
