@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { auth } from "@/auth";
-import { setSchema } from "@/components/workout/AddExerciseForm";
+import { setSchema } from "@/lib/schemas/workout-set";
 import prisma from "@/lib/prisma";
 
 const updateSetSchema = z
