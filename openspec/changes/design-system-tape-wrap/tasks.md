@@ -107,5 +107,5 @@ Satisfies: *Navigation Token Compliance*; success criterion on zero duplicated c
 
 ## Phase 4: Final Boundary Check
 
-- [ ] 4.1 `git diff --stat` against `main` (or tracker branch) shows no changes under `src/data/`, `prisma/`, `middleware.ts`, or route handlers (`route.ts`), and the only new file under `src/actions/` across the whole change is `src/actions/workout/update-set.ts`. Satisfies: *Presentation-Only Boundary*; proposal success criteria.
-- [ ] 4.2 Confirm no `Math.random()` was introduced for `TornStrip` seeding (SSR/CSR hydration safety) and no texture image/PNG asset was added for the torn edge.
+- [x] 4.1 `git diff --stat` against `main` (or tracker branch) shows no changes under `src/data/`, `prisma/`, `middleware.ts`, or route handlers (`route.ts`), and the only new file under `src/actions/` across the whole change is `src/actions/workout/update-set.ts`. Satisfies: *Presentation-Only Boundary*; proposal success criteria.
+- [x] 4.2 Confirm no `Math.random()` was introduced for `TornStrip` seeding (SSR/CSR hydration safety) and no texture image/PNG asset was added for the torn edge.
