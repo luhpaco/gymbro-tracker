@@ -1,5 +1,5 @@
 "use client";
-import { ResumeCard } from "@/components";
+import { TornStrip } from "@/components/ui/torn-strip";
 import { FilterExercises } from "./FilterExercises";
 import Link from "next/link";
 import { Exercise, MuscleGroup } from "@prisma/client";
@@ -23,15 +23,19 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 			<div className='flex flex-col gap-4'>
 				{filteredExercises.length > 0 ? (
 					filteredExercises.map((exercise, index) => (
-						<ResumeCard key={index}>
-							<ResumeCard.Header
+						<TornStrip
+							key={index}
+							seed={index}
+							className='w-full flex flex-col gap-8 text-sm'
+						>
+							<TornStrip.Header
 								title={exercise.name}
 								subTitle={
 									exercise.description ??
 									"No hay descripción para este ejercicio"
 								}
 							/>
-							<ResumeCard.Body>
+							<TornStrip.Body>
 								<div className='flex items-center justify-end'>
 									<Button asChild>
 										<Link href={`/exercises/update/${exercise.id}`}>
@@ -39,8 +43,8 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 										</Link>
 									</Button>
 								</div>
-							</ResumeCard.Body>
-						</ResumeCard>
+							</TornStrip.Body>
+						</TornStrip>
 					))
 				) : (
 					<>

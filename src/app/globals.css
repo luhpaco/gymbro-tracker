@@ -4,65 +4,35 @@
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 222.2 84% 4.9%;
+		--background: 40 4% 4%;
+		--foreground: 45 20% 94%;
 
-		--card: 0 0% 100%;
-		--card-foreground: 222.2 84% 4.9%;
+		--card: 45 25% 92%;
+		--card-foreground: 40 6% 8%;
 
-		--popover: 0 0% 100%;
-		--popover-foreground: 222.2 84% 4.9%;
+		--popover: 40 4% 6%;
+		--popover-foreground: 45 20% 94%;
 
-		--primary: 222.2 47.4% 11.2%;
-		--primary-foreground: 210 40% 98%;
+		--primary: 3 78% 53%;
+		--primary-foreground: 45 30% 96%;
 
-		--secondary: 210 40% 96.1%;
-		--secondary-foreground: 222.2 47.4% 11.2%;
+		--secondary: 40 6% 14%;
+		--secondary-foreground: 45 20% 94%;
 
-		--muted: 210 40% 96.1%;
-		--muted-foreground: 215.4 16.3% 46.9%;
+		--muted: 40 5% 16%;
+		--muted-foreground: 40 15% 60%;
 
-		--accent: 210 40% 96.1%;
-		--accent-foreground: 222.2 47.4% 11.2%;
+		--accent: 40 6% 18%;
+		--accent-foreground: 45 20% 94%;
 
-		--destructive: 0 84.2% 60.2%;
-		--destructive-foreground: 210 40% 98%;
+		--destructive: 0 70% 45%;
+		--destructive-foreground: 45 30% 96%;
 
-		--border: 214.3 31.8% 91.4%;
-		--input: 214.3 31.8% 91.4%;
-		--ring: 222.2 84% 4.9%;
+		--border: 40 6% 20%;
+		--input: 40 6% 16%;
+		--ring: 3 70% 60%;
 
-		--radius: 0.5rem;
-	}
-
-	.dark {
-		--background: 222.2 84% 4.9%;
-		--foreground: 210 40% 98%;
-
-		--card: 222.2 84% 4.9%;
-		--card-foreground: 210 40% 98%;
-
-		--popover: 222.2 84% 4.9%;
-		--popover-foreground: 210 40% 98%;
-
-		--primary: 210 40% 98%;
-		--primary-foreground: 222.2 47.4% 11.2%;
-
-		--secondary: 217.2 32.6% 17.5%;
-		--secondary-foreground: 210 40% 98%;
-
-		--muted: 217.2 32.6% 17.5%;
-		--muted-foreground: 215 20.2% 65.1%;
-
-		--accent: 217.2 32.6% 17.5%;
-		--accent-foreground: 210 40% 98%;
-
-		--destructive: 0 62.8% 30.6%;
-		--destructive-foreground: 210 40% 98%;
-
-		--border: 217.2 32.6% 17.5%;
-		--input: 217.2 32.6% 17.5%;
-		--ring: 212.7 26.8% 83.9%;
+		--radius: 0.125rem;
 	}
 }
 
@@ -79,7 +49,7 @@
 	h4,
 	h5,
 	h6 {
-		@apply font-bold;
+		@apply font-display uppercase tracking-wide;
 	}
 	h1 {
 		@apply text-2xl;
@@ -89,5 +59,153 @@
 	}
 	h3 {
 		@apply text-lg;
+	}
+}
+
+/*
+ * Athletic Tape & Wrap surface primitive.
+ *
+ * The torn edge is a real CSS `clip-path` polygon. X coordinates are `%` (tooth
+ * positions scale with width) while Y coordinates are `px` via `--tear`, so a
+ * 600px-tall strip and a 56px row share the same tooth depth — a pure-percentage
+ * polygon would stretch teeth into spikes on tall cards.
+ */
+@layer components {
+	/* Rotation wrapper: deterministic per-strip tilt, set via inline `--strip-rot`. */
+	.torn-strip-root {
+		transform: rotate(var(--strip-rot, 0deg));
+	}
+
+	/* Base torn surface (variant "a"): torn top and bottom, straight sides. */
+	.torn-strip {
+		--tear: 6px;
+		clip-path: polygon(
+			0 var(--tear),
+			6% 0,
+			14% calc(var(--tear) * 0.6),
+			23% 1px,
+			31% calc(var(--tear) * 0.85),
+			40% 0,
+			48% calc(var(--tear) * 0.5),
+			57% 1px,
+			66% calc(var(--tear) * 0.9),
+			75% 0,
+			84% calc(var(--tear) * 0.55),
+			92% 1px,
+			100% var(--tear),
+			100% calc(100% - var(--tear)),
+			92% 100%,
+			84% calc(100% - var(--tear) * 0.55),
+			75% calc(100% - 1px),
+			66% calc(100% - var(--tear) * 0.9),
+			57% 100%,
+			48% calc(100% - var(--tear) * 0.5),
+			40% calc(100% - 1px),
+			31% calc(100% - var(--tear) * 0.85),
+			23% 100%,
+			14% calc(100% - var(--tear) * 0.6),
+			6% calc(100% - 1px),
+			0 calc(100% - var(--tear))
+		);
+		/* drop-shadow (not box-shadow) so the silhouette follows the torn edge. */
+		filter: drop-shadow(0 2px 0 hsl(var(--background)));
+	}
+
+	/* Re-seeded polygon: variant "b". */
+	.torn-strip--b {
+		clip-path: polygon(
+			0 calc(var(--tear) * 0.8),
+			5% 1px,
+			12% 0,
+			21% calc(var(--tear) * 0.7),
+			29% 1px,
+			38% 0,
+			46% calc(var(--tear) * 0.9),
+			55% 1px,
+			64% calc(var(--tear) * 0.5),
+			72% 0,
+			81% calc(var(--tear) * 0.75),
+			90% 1px,
+			100% calc(var(--tear) * 0.8),
+			100% calc(100% - var(--tear) * 0.8),
+			90% 100%,
+			81% calc(100% - var(--tear) * 0.75),
+			72% calc(100% - 1px),
+			64% calc(100% - var(--tear) * 0.5),
+			55% 100%,
+			46% calc(100% - var(--tear) * 0.9),
+			38% calc(100% - 1px),
+			29% calc(100% - var(--tear) * 0.7),
+			21% 100%,
+			12% calc(100% - var(--tear) * 0.8),
+			5% calc(100% - 1px),
+			0 calc(100% - var(--tear) * 0.8)
+		);
+	}
+
+	/* Re-seeded polygon: variant "c". */
+	.torn-strip--c {
+		clip-path: polygon(
+			0 0,
+			8% calc(var(--tear) * 0.9),
+			17% 1px,
+			26% 0,
+			35% calc(var(--tear) * 0.6),
+			43% 1px,
+			52% 0,
+			60% calc(var(--tear) * 0.8),
+			69% 1px,
+			78% 0,
+			87% calc(var(--tear) * 0.65),
+			96% 1px,
+			100% 0,
+			100% calc(100% - var(--tear) * 0.9),
+			96% 100%,
+			87% calc(100% - var(--tear) * 0.65),
+			78% calc(100% - 1px),
+			69% calc(100% - var(--tear) * 0.8),
+			60% 100%,
+			52% calc(100% - 1px),
+			43% calc(100% - var(--tear) * 0.6),
+			35% 100%,
+			26% calc(100% - 1px),
+			17% calc(100% - var(--tear) * 0.9),
+			8% 100%,
+			0 calc(100% - var(--tear) * 0.9)
+		);
+	}
+
+	/* Straight top edge, torn bottom — for Header/Sidebar full-width bars. */
+	.torn-strip--edge-bottom {
+		clip-path: polygon(
+			0 0,
+			100% 0,
+			100% calc(100% - var(--tear)),
+			92% 100%,
+			84% calc(100% - var(--tear) * 0.55),
+			75% calc(100% - 1px),
+			66% calc(100% - var(--tear) * 0.9),
+			57% 100%,
+			48% calc(100% - var(--tear) * 0.5),
+			40% calc(100% - 1px),
+			31% calc(100% - var(--tear) * 0.85),
+			23% 100%,
+			14% calc(100% - var(--tear) * 0.6),
+			6% calc(100% - 1px),
+			0 calc(100% - var(--tear))
+		);
+	}
+
+	/* Dashed empty "pending" slot — no fill, no clip, signals an unfilled strip. */
+	.torn-strip--ghost {
+		background: transparent;
+		clip-path: none;
+		filter: none;
+		border: 2px dashed hsl(var(--border));
+	}
+
+	/* Fixed-region layout: internal churn cannot relayout ancestors. */
+	.reserved-region {
+		contain: layout paint;
 	}
 }

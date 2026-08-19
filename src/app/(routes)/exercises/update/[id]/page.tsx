@@ -1,6 +1,7 @@
 import { getExerciseById, getMuscleGroups } from "@/actions";
 import { auth } from "@/auth";
 import { ReturnButton, UpdateExerciseForm } from "@/components";
+import { TornStrip } from "@/components/ui/torn-strip";
 
 interface Props {
 	params: Promise<{
@@ -16,19 +17,21 @@ export default async function UpdateExercisePage({ params }: Props) {
 	if (!exercise) return <div>Exercise not found</div>;
 	return (
 		<section className='flex flex-col gap-6'>
-			<div className='flex flex-col gap-4 border border-gray-300 shadow-md p-6 rounded-md'>
-				<div>
-					<h2>Editar ejercicio</h2>
-					<p className='text-xs text-gray-400 mt-2'>
-						Vamos a actualizar la información del ejercicio:{" "}
-						<span className='font-semibold'>{exercise.name}</span>
-					</p>
+			<TornStrip>
+				<div className='flex flex-col gap-4'>
+					<div>
+						<h2>Editar ejercicio</h2>
+						<p className='text-xs text-muted-foreground mt-2'>
+							Vamos a actualizar la información del ejercicio:{" "}
+							<span className='font-semibold'>{exercise.name}</span>
+						</p>
+					</div>
+					<UpdateExerciseForm
+						listMuscleGroups={muscleGroups}
+						exerciseToEdit={exercise}
+					/>
 				</div>
-				<UpdateExerciseForm
-					listMuscleGroups={muscleGroups}
-					exerciseToEdit={exercise}
-				/>
-			</div>
+			</TornStrip>
 			<div className='flex justify-center items-center'>
 				<ReturnButton variant='link'>Regresar</ReturnButton>
 			</div>

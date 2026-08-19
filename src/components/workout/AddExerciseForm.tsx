@@ -11,6 +11,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { setSchema } from "@/lib/schemas/workout-set";
 import { Check, ChevronsUpDown, Minus, Plus } from "lucide-react";
 import {
 	Command,
@@ -21,17 +22,14 @@ import {
 	CommandList,
 } from "../ui/command";
 import { Input } from "../ui/input";
+import { TornStrip } from "../ui/torn-strip";
+import { Stat } from "../ui/stat";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUIStore, useWorkoutStore } from "@/store";
 import { Exercise } from "@prisma/client";
 
-const setSchema = z.object({
-	reps: z.coerce.number().min(1, { message: "Debes agregar tus repeticiones" }),
-	weight: z.coerce
-		.number()
-		.min(1, { message: "Debes agregar el peso de tus repeticiones" }),
-});
+export { setSchema };
 
 const setsSchema = z
 	.array(setSchema)
@@ -154,9 +152,11 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 									>
 										<Minus />
 									</Button>
-									<span className='border border-gray-300 rounded-md px-4 py-1 text-center text-2xl font-bold'>
-										{field.value.length}
-									</span>
+									<Stat
+										value={field.value.length}
+										width='2ch'
+										className='text-2xl'
+									/>
 									<Button
 										size='icon'
 										type='button'
@@ -181,10 +181,8 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 				<div>
 					{!!form.watch("sets") &&
 						form.watch("sets").map((_, index) => (
-							<div key={index} className='flex flex-col my-4'>
-								<p className='font-semibold text-center my-2 uppercase'>
-									Serie {index + 1}
-								</p>
+							<TornStrip key={index} className='my-4'>
+								<TornStrip.Tag>SERIE {index + 1}</TornStrip.Tag>
 								<div className='flex gap-4 justify-between'>
 									<FormField
 										control={form.control}
@@ -213,7 +211,7 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 										)}
 									/>
 								</div>
-							</div>
+							</TornStrip>
 						))}
 				</div>
 				<Button type='submit' className='w-full mt-10'>

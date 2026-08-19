@@ -1,4 +1,4 @@
-import { ResumeCard } from "@/components";
+import { TornStrip } from "@/components/ui/torn-strip";
 import { Button } from "@/components/ui/button";
 import { WorkoutToDisplay } from "@/interfaces";
 import { DumbbellIcon } from "lucide-react";
@@ -12,17 +12,21 @@ export const WorkoutsSection = ({ workoutsToDisplay }: Props) => {
 	return (
 		<section className='flex flex-col gap-4 mt-6'>
 			{workoutsToDisplay.map((workout) => (
-				<ResumeCard key={workout.id}>
-					<ResumeCard.Header
+				<TornStrip
+					key={workout.id}
+					seed={workout.id}
+					className='w-full flex flex-col gap-8 text-sm'
+				>
+					<TornStrip.Header
 						title={workout.name}
 						subTitle={workout.date.toDateString()}
 					/>
-					<ResumeCard.Body>
+					<TornStrip.Body>
 						<div className='flex flex-col gap-2 text-sm'>
 							<p>Resumen de tu entrenamiento:</p>
 							<div className='flex justify-between items-center'>
-								<p className='text-gray-400 text-xs'>Nombre del ejercicio</p>
-								<p className='text-gray-400 text-xs'>Series</p>
+								<p className='text-muted-foreground text-xs'>Nombre del ejercicio</p>
+								<p className='text-muted-foreground text-xs'>Series</p>
 							</div>
 							{Object.keys(workout.sets).map((exercise) => (
 								<div
@@ -44,8 +48,8 @@ export const WorkoutsSection = ({ workoutsToDisplay }: Props) => {
 								Ver entrenamiento
 							</Button>
 						</Link>
-					</ResumeCard.Body>
-				</ResumeCard>
+					</TornStrip.Body>
+				</TornStrip>
 			))}
 		</section>
 	);

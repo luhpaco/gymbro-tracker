@@ -14,19 +14,19 @@ export const Header = () => {
 		<>
 			<header
 				className={clsx(
-					"px-6 py-4 flex items-center justify-between border-gray-400 transition-all ease-in relative z-20 bg-white",
+					"px-6 py-4 flex items-center justify-between transition-all ease-in relative z-20 bg-background torn-strip torn-strip--edge-bottom",
 					isSidebarOpen ? "shadow-none" : "shadow-md"
 				)}
 			>
 				<Link href='/dashboard' className='flex items-center gap-2'>
 					<LiaDumbbellSolid className='w-6 h-6' />
-					<h1 className='text-2xl font-bold'>Gymbro Tracker</h1>
+					<h1 className='text-2xl font-display uppercase'>Gymbro Tracker</h1>
 				</Link>
 				<button
 					onClick={() => {
 						isSidebarOpen ? closeSidebar() : openSidebar();
 					}}
-					className='p-2 rounded-md border border-gray-400 hover:bg-slate-300 hover:text-black'
+					className='p-2 rounded-md border'
 				>
 					<TiThMenu />
 				</button>
