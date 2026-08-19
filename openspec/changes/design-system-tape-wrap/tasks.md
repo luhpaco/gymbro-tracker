@@ -88,10 +88,10 @@ Satisfies: *Inline Edit in Workout Detail View*; proposal's Acknowledged Excepti
 
 ### 2E. Auth — full strength (PR 6)
 
-- [ ] 2.19 `src/app/auth/layout.tsx`: apply `TornStrip`/token background, no reduced treatment vs. dashboard.
-- [ ] 2.20 `src/app/auth/login/page.tsx` + `src/app/auth/login/ui/LoginForm.tsx`: swap `ResumeCard`/hardcoded classes for direct `TornStrip`, Anton wordmark, `text-muted-foreground`.
-- [ ] 2.21 `src/app/auth/register/page.tsx` + `src/app/auth/register/ui/RegisterForm.tsx`: same treatment as 2.20.
-- [ ] 2.22 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual side-by-side screenshot of `/auth/login` vs `/dashboard` confirming equal visual strength.
+- [x] 2.19 `src/app/auth/layout.tsx`: apply `TornStrip`/token background, no reduced treatment vs. dashboard.
+- [x] 2.20 `src/app/auth/login/page.tsx` + `src/app/auth/login/ui/LoginForm.tsx`: swap `ResumeCard`/hardcoded classes for direct `TornStrip`, Anton wordmark, `text-muted-foreground`.
+- [x] 2.21 `src/app/auth/register/page.tsx` + `src/app/auth/register/ui/RegisterForm.tsx`: same treatment as 2.20.
+- [x] 2.22 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual side-by-side screenshot of `/auth/login` vs `/dashboard` confirming equal visual strength.
 
 Satisfies: *Full-App Token and Typography Application* (auth-parity scenario).
 
