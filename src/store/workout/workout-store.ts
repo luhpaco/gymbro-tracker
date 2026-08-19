@@ -14,6 +14,11 @@ interface Workout {
 	addExercise: (exercise: Exercise) => void;
 	removeExercise: (exerciseValue: string) => void;
 	resetExercises: () => void;
+	updateSet: (
+		exerciseValue: string,
+		setIndex: number,
+		patch: Partial<Exercise["sets"][number]>
+	) => void;
 }
 
 export const useWorkoutStore = create<Workout>()((set, get) => ({
@@ -33,4 +38,22 @@ export const useWorkoutStore = create<Workout>()((set, get) => ({
 		set({ exercises: updatedExercises });
 	},
 	resetExercises: () => set({ exercises: [] }),
+	updateSet: (exerciseValue, setIndex, patch) => {
+		const { exercises } = get();
+		const exercise = exercises.find(
+			(exercise) => exercise.exerciseValue === exerciseValue
+		);
+		if (!exercise) return;
+		const targetSet = exercise.sets[setIndex];
+		if (!targetSet) return;
+		// Mutate the existing set object's weight/reps fields in place.
+		if (patch.weight !== undefined) {
+			targetSet.weight = patch.weight;
+		}
+		if (patch.reps !== undefined) {
+			targetSet.reps = patch.reps;
+		}
+		// Publish a new outer snapshot so Zustand subscribers re-render.
+		set({ exercises: [...exercises] });
+	},
 }));

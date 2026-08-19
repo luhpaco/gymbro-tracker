@@ -1,6 +1,6 @@
 import { getExercisesSummary, getWorkouts } from "@/actions";
 import { auth } from "@/auth";
-import { ResumeCard } from "@/components";
+import { TornStrip } from "@/components/ui/torn-strip";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -23,12 +23,12 @@ export default async function DashboardPage() {
 			<h1>
 				Hola de nuevo, {session.user.firstName} {session.user.lastName}
 			</h1>
-			<ResumeCard>
-				<ResumeCard.Header
+			<TornStrip className='w-full flex flex-col gap-8 text-sm'>
+				<TornStrip.Header
 					title='Últimos entrenamientos'
 					subTitle='Aquí figuran tus últimos entrenamientos registrados'
 				/>
-				<ResumeCard.Body>
+				<TornStrip.Body>
 					<div className='flex flex-col gap-4'>
 						{recentWorkouts.map((workout) => (
 							<div
@@ -40,15 +40,15 @@ export default async function DashboardPage() {
 							</div>
 						))}
 					</div>
-				</ResumeCard.Body>
-				<ResumeCard.Link text='Ir a tus entrenamientos' href='/workouts' />
-			</ResumeCard>
-			<ResumeCard>
-				<ResumeCard.Header
+				</TornStrip.Body>
+				<TornStrip.Link text='Ir a tus entrenamientos' href='/workouts' />
+			</TornStrip>
+			<TornStrip className='w-full flex flex-col gap-8 text-sm'>
+				<TornStrip.Header
 					title='Resumen de tus ejercicios'
 					subTitle='Tus ejercicios con mas series completadas'
 				/>
-				<ResumeCard.Body>
+				<TornStrip.Body>
 					<div className='flex flex-col gap-4'>
 						{exercisesSummary.map((exercise) => (
 							<div
@@ -60,9 +60,9 @@ export default async function DashboardPage() {
 							</div>
 						))}
 					</div>
-				</ResumeCard.Body>
-				<ResumeCard.Link text='Ir a tus ejercicios' href='/exercises' />
-			</ResumeCard>
+				</TornStrip.Body>
+				<TornStrip.Link text='Ir a tus ejercicios' href='/exercises' />
+			</TornStrip>
 		</div>
 	);
 }

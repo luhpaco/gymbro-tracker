@@ -16,7 +16,7 @@ export default async function WorkoutsPage() {
 	return (
 		<section>
 			<h1>Entrenamientos</h1>
-			<p className='text-sm text-gray-400 mt-2'>
+			<p className='text-sm text-muted-foreground mt-2'>
 				Aquí se mostrarán todos tus entrenamientos registrados
 			</p>
 			<WorkoutsSection workoutsToDisplay={createdWorkouts} />
