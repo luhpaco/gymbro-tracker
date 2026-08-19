@@ -43,17 +43,20 @@ export const useWorkoutStore = create<Workout>()((set, get) => ({
 		const exercise = exercises.find(
 			(exercise) => exercise.exerciseValue === exerciseValue
 		);
-		if (!exercise) return;
-		const targetSet = exercise.sets[setIndex];
-		if (!targetSet) return;
-		// Mutate the existing set object's weight/reps fields in place.
-		if (patch.weight !== undefined) {
-			targetSet.weight = patch.weight;
-		}
-		if (patch.reps !== undefined) {
-			targetSet.reps = patch.reps;
-		}
-		// Publish a new outer snapshot so Zustand subscribers re-render.
-		set({ exercises: [...exercises] });
+		if (!exercise || !exercise.sets[setIndex]) return;
+		set({
+			exercises: exercises.map((exercise) =>
+				exercise.exerciseValue === exerciseValue
+					? {
+							...exercise,
+							sets: exercise.sets.map((exerciseSet, index) =>
+								index === setIndex
+									? { ...exerciseSet, ...patch }
+									: exerciseSet
+							),
+						}
+					: exercise
+			),
+		});
 	},
 }));
