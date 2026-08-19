@@ -11,6 +11,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { setSchema } from "@/lib/schemas/workout-set";
 import { Check, ChevronsUpDown, Minus, Plus } from "lucide-react";
 import {
 	Command,
@@ -28,12 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useUIStore, useWorkoutStore } from "@/store";
 import { Exercise } from "@prisma/client";
 
-export const setSchema = z.object({
-	reps: z.coerce.number().min(1, { message: "Debes agregar tus repeticiones" }),
-	weight: z.coerce
-		.number()
-		.min(1, { message: "Debes agregar el peso de tus repeticiones" }),
-});
+export { setSchema };
 
 const setsSchema = z
 	.array(setSchema)

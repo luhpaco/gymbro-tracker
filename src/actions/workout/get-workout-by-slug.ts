@@ -12,6 +12,7 @@ export const getWorkoutBySlug = async (slug: string, userId: string) => {
 			},
 			include: {
 				sets: {
+					orderBy: { id: "asc" },
 					include: {
 						exercise: {
 							select: {
