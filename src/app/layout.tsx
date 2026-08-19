@@ -23,15 +23,6 @@ const fontHand = Permanent_Marker({
 	variable: "--font-hand",
 });
 
-const DIRECTION_CONTRACT = `<!--
-THESIS: Gymbro Tracker reads as gear taped onto you before you lift, not software you fill out — logging a set means tearing a strip and writing the number down.
-OWN-WORLD: Matte charcoal-black ground, chalk-white torn strips, one signal-red accent for state and action. Anton for display, wordmarks and labels; Permanent Marker for handwritten numerals only (weight, reps, timers); Inter for body copy. Near-zero border radius — tape doesn't round its corners.
-STORY: Mid-set, the lifter glances at the screen, sees today's strips at a glance, taps to tear a new one, and the number they scrawl reads clearly under gym light without hunting through menus.
-FIRST VIEWPORT: Today's session as a stack of torn tape strips — exercise name in Anton caps, weight/reps in Permanent Marker, a red set-tag corner per strip, primary action rendered as a torn red strip CTA.
-FORM: Athletic Tape & Wrap, candidate 7 of 7 on the grounded list, seed key 20c9228e.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
--->`;
-
 export const metadata: Metadata = {
 	title: "GymbroTracker",
 	description:
@@ -55,7 +46,6 @@ export default async function RootLayout({
 					fontHand.variable
 				)}
 			>
-				<div dangerouslySetInnerHTML={{ __html: DIRECTION_CONTRACT }} />
 				{isMaintenance ? (
 					<MaintenancePage />
 				) : (
