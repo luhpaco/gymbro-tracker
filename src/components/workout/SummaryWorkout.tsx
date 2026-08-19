@@ -61,13 +61,8 @@ export const SummaryWorkout = () => {
 														<li key={index} className='h-14'>
 															<TornStrip
 																flat
-																className='torn-strip--ghost h-full flex items-center [&>span]:bg-transparent'
+																className='torn-strip--ghost h-full flex items-center [&>span]:bg-transparent [&>div]:w-full'
 															>
-																<div className='flex w-full items-center justify-between'>
-																	<span className='text-xs text-muted-foreground'>
-																		pending
-																	</span>
-																</div>
 																<TornStrip.Tag>
 																	pending
 																</TornStrip.Tag>
