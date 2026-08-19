@@ -88,20 +88,20 @@ Satisfies: *Inline Edit in Workout Detail View*; proposal's Acknowledged Excepti
 
 ### 2E. Auth — full strength (PR 6)
 
-- [ ] 2.19 `src/app/auth/layout.tsx`: apply `TornStrip`/token background, no reduced treatment vs. dashboard.
-- [ ] 2.20 `src/app/auth/login/page.tsx` + `src/app/auth/login/ui/LoginForm.tsx`: swap `ResumeCard`/hardcoded classes for direct `TornStrip`, Anton wordmark, `text-muted-foreground`.
-- [ ] 2.21 `src/app/auth/register/page.tsx` + `src/app/auth/register/ui/RegisterForm.tsx`: same treatment as 2.20.
-- [ ] 2.22 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual side-by-side screenshot of `/auth/login` vs `/dashboard` confirming equal visual strength.
+- [x] 2.19 `src/app/auth/layout.tsx`: apply `TornStrip`/token background, no reduced treatment vs. dashboard.
+- [x] 2.20 `src/app/auth/login/page.tsx` + `src/app/auth/login/ui/LoginForm.tsx`: swap `ResumeCard`/hardcoded classes for direct `TornStrip`, Anton wordmark, `text-muted-foreground`.
+- [x] 2.21 `src/app/auth/register/page.tsx` + `src/app/auth/register/ui/RegisterForm.tsx`: same treatment as 2.20.
+- [x] 2.22 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual side-by-side screenshot of `/auth/login` vs `/dashboard` confirming equal visual strength.
 
 Satisfies: *Full-App Token and Typography Application* (auth-parity scenario).
 
 ## Phase 3: Navigation Cleanup (last) (PR 7)
 
-- [ ] 3.1 `src/components/Header.tsx`: drop `bg-white`, `border-gray-400`, `hover:bg-slate-300 hover:text-black`; apply `bg-background` + `torn-strip--edge-bottom`; wordmark gets `font-display uppercase`.
-- [ ] 3.2 `src/components/Sidebar.tsx`: drop `bg-white dark:bg-gray-500`, `hover:bg-gray-100 dark:hover:bg-gray-800`; apply `bg-secondary` + `torn-strip--edge-bottom`; merge the two duplicate overlay `div`s into one `bg-black/60 backdrop-blur-sm`; active link gets `border-l-2 border-primary`. Decision point (design Open Question #3, non-blocking): active-route indicator needs `usePathname` — include it in this task if trivial, otherwise defer to a follow-up and note it in the PR description.
-- [ ] 3.3 Confirm every `ResumeCard` consumer now imports `TornStrip` directly (Phase 2 complete), then delete `src/components/ResumeCard.tsx`.
-- [ ] 3.4 Repo-wide check: `grep -rn "dark:\|bg-white" src/components src/app` returns no in-scope matches.
-- [ ] 3.5 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual: open mobile sidebar overlay, confirm no dead-class remnants, confirm active link indicator.
+- [x] 3.1 `src/components/Header.tsx`: drop `bg-white`, `border-gray-400`, `hover:bg-slate-300 hover:text-black`; apply `bg-background` + `torn-strip--edge-bottom`; wordmark gets `font-display uppercase`.
+- [x] 3.2 `src/components/Sidebar.tsx`: drop `bg-white dark:bg-gray-500`, `hover:bg-gray-100 dark:hover:bg-gray-800`; apply `bg-secondary` + `torn-strip--edge-bottom`; merge the two duplicate overlay `div`s into one `bg-black/60 backdrop-blur-sm`; active link gets `border-l-2 border-primary`. Decision point (design Open Question #3, non-blocking): active-route indicator needs `usePathname` — include it in this task if trivial, otherwise defer to a follow-up and note it in the PR description.
+- [x] 3.3 Confirm every `ResumeCard` consumer now imports `TornStrip` directly (Phase 2 complete), then delete `src/components/ResumeCard.tsx`.
+- [x] 3.4 Repo-wide check: `grep -rn "dark:\|bg-white" src/components src/app` returns no in-scope matches.
+- [x] 3.5 Verify: `pnpm build && pnpm lint && pnpm exec tsc --noEmit` clean; manual: open mobile sidebar overlay, confirm no dead-class remnants, confirm active link indicator.
 
 Satisfies: *Navigation Token Compliance*; success criterion on zero duplicated card markup.
 
