@@ -1,16 +1,10 @@
 import { getWorkoutBySlug } from "@/actions";
 import { auth } from "@/auth";
 import { ReturnButton } from "@/components";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+import { TornStrip } from "@/components/ui/torn-strip";
+import { WorkoutDetailSets } from "@/components/workout/WorkoutDetailSets";
 import { WorkoutDetail } from "@/interfaces";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 interface Props {
 	params: Promise<{
@@ -31,44 +25,23 @@ export default async function WorkoutDetailPage({ params }: Props) {
 	return (
 		<section>
 			<h1>Entrenamiento: {workoutDetail.name}</h1>
-			<p className='text-gray-400 mt-2'>
+			<p className='text-muted-foreground mt-2'>
 				Fecha: {workoutDetail.date.toLocaleDateString()}
 			</p>
-			<div>
-				<div className='my-5'>
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Nombre del ejercicio</TableHead>
-								<TableHead className='text-center'>Serie</TableHead>
-								<TableHead className='text-center'>Reps(N°)</TableHead>
-								<TableHead className='text-center'>Peso (Kg)</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{Object.keys(workoutDetail.sets).map((exercise) => (
-								<TableRow key={exercise}>
-									<TableCell>{exercise}</TableCell>
-									<TableCell className='text-center space-y-4'>
-										{workoutDetail.sets[exercise].map((set, index) => (
-											<p key={set.id}>{index + 1}</p>
-										))}
-									</TableCell>
-									<TableCell className='text-center space-y-4'>
-										{workoutDetail.sets[exercise].map((set) => (
-											<p key={set.id}>{set.reps}</p>
-										))}
-									</TableCell>
-									<TableCell className='text-center space-y-4'>
-										{workoutDetail.sets[exercise].map((set) => (
-											<p key={set.id}>{set.weight}</p>
-										))}
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</div>
+			<div className='my-5 flex flex-col gap-4'>
+				{Object.entries(workoutDetail.sets).map(
+					([exerciseName, sets]) => (
+						<TornStrip key={exerciseName} seed={exerciseName}>
+							<TornStrip.Header title={exerciseName} />
+							<TornStrip.Body>
+								<WorkoutDetailSets
+									exerciseName={exerciseName}
+									sets={sets}
+								/>
+							</TornStrip.Body>
+						</TornStrip>
+					)
+				)}
 			</div>
 			<div className='flex justify-center items-center'>
 				<ReturnButton>Regresar</ReturnButton>
