@@ -45,6 +45,7 @@ next-env.d.ts
 # Local agent tooling and machine-specific config
 /.claude/
 /.mcp.json
+/opencode.json
 /.playwright-mcp/
 /.codegraph/
 /.impeccable/
