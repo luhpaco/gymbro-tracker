@@ -2,7 +2,7 @@ schema: spec-driven
 
 context: |
   Tech stack: Next.js 15.x (App Router), React 19, TypeScript 5 (strict), pnpm
-  Database: PostgreSQL 15 via Docker, Prisma 5.16.1 ORM
+  Database: PostgreSQL 15 via Docker, Prisma 5.18.0 ORM
   Auth: Next-Auth 5 (Credentials provider, middleware-protected routes)
   Styling: Tailwind CSS 3.4, shadcn/ui (Radix UI), class-variance-authority
   Forms/validation: React Hook Form + Zod
