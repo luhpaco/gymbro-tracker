@@ -67,6 +67,17 @@ const TornStrip = React.forwardRef<HTMLDivElement, TornStripProps>(
 		const variantClass = TEAR_VARIANTS[hash % TEAR_VARIANTS.length];
 		const rot = flat ? undefined : STRIP_ROTS[hash % STRIP_ROTS.length];
 		const toneKey: Tone = tone ?? "default";
+		const contentChildren: React.ReactNode[] = [];
+		const tagChildren: React.ReactNode[] = [];
+
+		React.Children.forEach(children, (child) => {
+			if (React.isValidElement(child) && child.type === TornStripTag) {
+				tagChildren.push(child);
+				return;
+			}
+
+			contentChildren.push(child);
+		});
 
 		return (
 			<div
@@ -88,8 +99,9 @@ const TornStrip = React.forwardRef<HTMLDivElement, TornStripProps>(
 					)}
 				/>
 				<div className={cn("relative", flat ? "px-4 py-2" : "p-6")}>
-					{children}
+					{contentChildren}
 				</div>
+				{tagChildren}
 			</div>
 		);
 	}
