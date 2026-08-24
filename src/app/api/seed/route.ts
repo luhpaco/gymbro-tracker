@@ -15,17 +15,17 @@ export async function GET() {
 			});
 			return NextResponse.json(
 				{ message: "Seed executed successfully" },
-				{ status: 200 }
+				{ status: 200 },
 			);
 		}
 		return NextResponse.json(
 			{ message: "There are data, We can't execute this seed" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	} catch (error) {
 		return NextResponse.json(
 			{ message: "Error executing seed" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }

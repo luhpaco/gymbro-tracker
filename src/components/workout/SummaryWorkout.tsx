@@ -46,79 +46,66 @@ export const SummaryWorkout = () => {
 											type='button'
 											className='p-1 text-destructive rounded-md'
 											aria-label={`Eliminar ${exercise.exerciseName}`}
-											onClick={() =>
-												removeExercise(exercise.exerciseValue)
-											}
+											onClick={() => removeExercise(exercise.exerciseValue)}
 										>
 											<Trash2 size={18} />
 										</button>
 									</div>
 									<ol className='reserved-region flex flex-col gap-2'>
-										{Array.from({ length: rowsReserved }).map(
-											(_, index) => {
-												if (index >= exercise.sets.length) {
-													return (
-														<li key={index} className='h-14'>
-															<TornStrip
-																flat
-																className='torn-strip--ghost h-full flex items-center [&>span[aria-hidden]]:bg-transparent [&>div]:w-full'
-															>
-																<TornStrip.Tag>
-																	pending
-																</TornStrip.Tag>
-															</TornStrip>
-														</li>
-													);
-												}
-												const set = exercise.sets[index];
+										{Array.from({ length: rowsReserved }).map((_, index) => {
+											if (index >= exercise.sets.length) {
 												return (
 													<li key={index} className='h-14'>
 														<TornStrip
 															flat
-															className='h-full flex items-center'
+															className='torn-strip--ghost h-full flex items-center [&>span[aria-hidden]]:bg-transparent [&>div]:w-full'
 														>
-															<div className='flex w-full items-center justify-between'>
-																<div className='flex items-baseline gap-2'>
-																	<span className='text-xs text-muted-foreground'>
-																		Peso
-																	</span>
-																	<EditableStat
-																		value={set.weight}
-																		label={`Peso, serie ${index + 1}, ${exercise.exerciseName}`}
-																		unit='kg'
-																		onCommit={(next) =>
-																			updateSet(
-																				exercise.exerciseValue,
-																				index,
-																				{ weight: next }
-																			)
-																		}
-																		validate={validateWeight}
-																	/>
-																</div>
-																<div className='flex items-baseline gap-2'>
-																	<span className='text-xs text-muted-foreground'>
-																		Reps
-																	</span>
-																	<EditableStat
-																		value={set.reps}
-																		label={`Repeticiones, serie ${index + 1}, ${exercise.exerciseName}`}
-																		onCommit={(next) =>
-																			updateSet(
-																				exercise.exerciseValue,
-																				index,
-																				{ reps: next }
-																			)
-																		}
-																		validate={validateReps}
-																	/>
-																</div>
-															</div>
+															<TornStrip.Tag>pending</TornStrip.Tag>
 														</TornStrip>
 													</li>
 												);
 											}
-										)}
+											const set = exercise.sets[index];
+											return (
+												<li key={index} className='h-14'>
+													<TornStrip flat className='h-full flex items-center'>
+														<div className='flex w-full items-center justify-between'>
+															<div className='flex items-baseline gap-2'>
+																<span className='text-xs text-muted-foreground'>
+																	Peso
+																</span>
+																<EditableStat
+																	value={set.weight}
+																	label={`Peso, serie ${index + 1}, ${exercise.exerciseName}`}
+																	unit='kg'
+																	onCommit={(next) =>
+																		updateSet(exercise.exerciseValue, index, {
+																			weight: next,
+																		})
+																	}
+																	validate={validateWeight}
+																/>
+															</div>
+															<div className='flex items-baseline gap-2'>
+																<span className='text-xs text-muted-foreground'>
+																	Reps
+																</span>
+																<EditableStat
+																	value={set.reps}
+																	label={`Repeticiones, serie ${index + 1}, ${exercise.exerciseName}`}
+																	onCommit={(next) =>
+																		updateSet(exercise.exerciseValue, index, {
+																			reps: next,
+																		})
+																	}
+																	validate={validateReps}
+																/>
+															</div>
+														</div>
+													</TornStrip>
+												</li>
+											);
+										})}
 									</ol>
 								</div>
 							);

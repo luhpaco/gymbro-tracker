@@ -111,7 +111,7 @@ export const SummaryWorkoutForm = ({ exerciseList }: Props) => {
 											variant='outline'
 											className={cn(
 												"w-full pl-3 text-left font-normal",
-												!field.value && "text-muted-foreground"
+												!field.value && "text-muted-foreground",
 											)}
 										>
 											{field.value ? (
@@ -154,7 +154,10 @@ export const SummaryWorkoutForm = ({ exerciseList }: Props) => {
 							form.setValue("listExercises", exerciseList);
 							form.setValue(
 								"tagWorkout",
-								form.getValues("nameWorkout").toLowerCase().replace(/\s+/g, "-")
+								form
+									.getValues("nameWorkout")
+									.toLowerCase()
+									.replace(/\s+/g, "-"),
 							);
 						}
 					}}

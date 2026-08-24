@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+postgres/
+.codegraph/
+design/
+pnpm-lock.yaml
+prisma/migrations/
+next-env.d.ts
+openspec/
+*.md
+
+# shadcn/ui vendored components — keep the CLI's own generated style so
+# `npx shadcn add`/updates don't fight this repo's Prettier config.
+src/components/ui/

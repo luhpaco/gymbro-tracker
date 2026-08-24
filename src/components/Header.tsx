@@ -15,7 +15,7 @@ export const Header = () => {
 			<header
 				className={clsx(
 					"px-6 py-4 flex items-center justify-between transition-all ease-in relative z-20 bg-background torn-strip torn-strip--edge-bottom",
-					isSidebarOpen ? "shadow-none" : "shadow-md"
+					isSidebarOpen ? "shadow-none" : "shadow-md",
 				)}
 			>
 				<Link href='/dashboard' className='flex items-center gap-2'>

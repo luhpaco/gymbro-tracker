@@ -1,8 +1,8 @@
 packages:
-  - '.'
+  - "."
 
 allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
+  "@prisma/client": true
+  "@prisma/engines": true
   prisma: true
   sharp: true

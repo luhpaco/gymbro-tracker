@@ -18,7 +18,7 @@ export default async function WorkoutDetailPage({ params }: Props) {
 	if (!session) return redirect("/login");
 	const workoutDetail = (await getWorkoutBySlug(
 		decodeURIComponent(slug),
-		session.user.id
+		session.user.id,
 	)) as WorkoutDetail;
 
 	if (!workoutDetail) redirect("/workouts");
@@ -29,19 +29,14 @@ export default async function WorkoutDetailPage({ params }: Props) {
 				Fecha: {workoutDetail.date.toLocaleDateString()}
 			</p>
 			<div className='my-5 flex flex-col gap-4'>
-				{Object.entries(workoutDetail.sets).map(
-					([exerciseName, sets]) => (
-						<TornStrip key={exerciseName} seed={exerciseName}>
-							<TornStrip.Header title={exerciseName} />
-							<TornStrip.Body>
-								<WorkoutDetailSets
-									exerciseName={exerciseName}
-									sets={sets}
-								/>
-							</TornStrip.Body>
-						</TornStrip>
-					)
-				)}
+				{Object.entries(workoutDetail.sets).map(([exerciseName, sets]) => (
+					<TornStrip key={exerciseName} seed={exerciseName}>
+						<TornStrip.Header title={exerciseName} />
+						<TornStrip.Body>
+							<WorkoutDetailSets exerciseName={exerciseName} sets={sets} />
+						</TornStrip.Body>
+					</TornStrip>
+				))}
 			</div>
 			<div className='flex justify-center items-center'>
 				<ReturnButton>Regresar</ReturnButton>

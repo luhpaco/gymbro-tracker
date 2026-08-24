@@ -105,7 +105,10 @@ function migrationSql(): string {
 		);
 	}
 
-	assert(!/seed|\/api\/seed|pnpm build/i.test(contents), "migration must not invoke seed or build behavior");
+	assert(
+		!/seed|\/api\/seed|pnpm build/i.test(contents),
+		"migration must not invoke seed or build behavior",
+	);
 	return contents;
 }
 
@@ -125,7 +128,8 @@ function errorText(error: unknown): string {
 	if (typeof error === "object" && error !== null && "stderr" in error) {
 		const stderr = (error as { stderr?: string | Buffer }).stderr;
 		if (typeof stderr === "string" && stderr) return stderr;
-		if (Buffer.isBuffer(stderr) && stderr.length > 0) return stderr.toString("utf8");
+		if (Buffer.isBuffer(stderr) && stderr.length > 0)
+			return stderr.toString("utf8");
 	}
 
 	return error instanceof Error ? error.message : "unknown failure";
@@ -168,10 +172,16 @@ function canonicalRows(): string {
 
 function assertCanonicalState(): void {
 	const rows = canonicalRows().split(",");
-	assert(rows.length === canonicalMuscleGroups.length, "canonical row count must be fourteen");
+	assert(
+		rows.length === canonicalMuscleGroups.length,
+		"canonical row count must be fourteen",
+	);
 
 	for (const [tag, name] of canonicalMuscleGroups) {
-		assert(rows.includes(`${tag}:${name}`), `canonical pair missing after provisioning: ${tag}`);
+		assert(
+			rows.includes(`${tag}:${name}`),
+			`canonical pair missing after provisioning: ${tag}`,
+		);
 	}
 }
 
@@ -194,9 +204,13 @@ function freshAndRetryCase(): void {
 	resetFixture();
 	applyMigration();
 	assertCanonicalState();
-	const beforeRetry = sql("SELECT string_agg(\"id\"::text || ':' || \"tag\" || ':' || \"name\", ',' ORDER BY \"tag\") FROM \"MuscleGroup\";");
+	const beforeRetry = sql(
+		'SELECT string_agg("id"::text || \':\' || "tag" || \':\' || "name", \',\' ORDER BY "tag") FROM "MuscleGroup";',
+	);
 	applyMigration();
-	const afterRetry = sql("SELECT string_agg(\"id\"::text || ':' || \"tag\" || ':' || \"name\", ',' ORDER BY \"tag\") FROM \"MuscleGroup\";");
+	const afterRetry = sql(
+		'SELECT string_agg("id"::text || \':\' || "tag" || \':\' || "name", \',\' ORDER BY "tag") FROM "MuscleGroup";',
+	);
 	assert(beforeRetry === afterRetry, "retry must not mutate canonical rows");
 }
 
@@ -209,14 +223,30 @@ function upgradeAndDivergenceCase(): void {
 		INSERT INTO "Exercise" ("id", "muscleGroupTag", "userId") VALUES ('exercise-1', 'chest', 'user-1');
 		INSERT INTO "Set" ("id", "workoutId", "exerciseId") VALUES ('set-1', 'workout-1', 'exercise-1');
 	`);
-	const chestId = sql('SELECT "id"::text FROM "MuscleGroup" WHERE "tag" = \'chest\';');
+	const chestId = sql(
+		'SELECT "id"::text FROM "MuscleGroup" WHERE "tag" = \'chest\';',
+	);
 	applyMigration();
 	assertCanonicalState();
 	const after = snapshot();
 	assert(after.includes("groups=15"), "extra muscle group must be preserved");
-	assert(after.includes("users=1") && after.includes("workouts=1") && after.includes("exercises=1") && after.includes("sets=1"), "user-owned rows and relationships must be preserved");
-	assert(after.includes(`chest=${chestId}:chest:Pecho`), "existing chest row must retain its identifier and tag while its name is reconciled");
-	assert(sql('SELECT "muscleGroupTag" FROM "Exercise" WHERE "id" = \'exercise-1\';') === "chest", "exercise foreign key must remain unchanged");
+	assert(
+		after.includes("users=1") &&
+			after.includes("workouts=1") &&
+			after.includes("exercises=1") &&
+			after.includes("sets=1"),
+		"user-owned rows and relationships must be preserved",
+	);
+	assert(
+		after.includes(`chest=${chestId}:chest:Pecho`),
+		"existing chest row must retain its identifier and tag while its name is reconciled",
+	);
+	assert(
+		sql(
+			'SELECT "muscleGroupTag" FROM "Exercise" WHERE "id" = \'exercise-1\';',
+		) === "chest",
+		"exercise foreign key must remain unchanged",
+	);
 }
 
 function collisionCase(): void {
@@ -226,13 +256,52 @@ function collisionCase(): void {
 	`);
 	const before = snapshot();
 	const failure = applyMigration(true);
-	assert(failure.includes("P0001") && failure.includes("reference_data_provisioning_incompatible_state"), "collision must return the static P0001 failure class");
+	assert(
+		failure.includes("P0001") &&
+			failure.includes("reference_data_provisioning_incompatible_state"),
+		"collision must return the static P0001 failure class",
+	);
 	assert(snapshot() === before, "collision must roll back without mutation");
 }
 
 async function concurrencyCases(): Promise<void> {
 	resetFixture();
-	await Promise.all([runDockerAsync(["exec", "-i", containerName, "psql", "--set", "ON_ERROR_STOP=1", "--set", "VERBOSITY=verbose", "--username", "postgres", "--dbname", "postgres"], migrationSql()), runDockerAsync(["exec", "-i", containerName, "psql", "--set", "ON_ERROR_STOP=1", "--set", "VERBOSITY=verbose", "--username", "postgres", "--dbname", "postgres"], migrationSql())]);
+	await Promise.all([
+		runDockerAsync(
+			[
+				"exec",
+				"-i",
+				containerName,
+				"psql",
+				"--set",
+				"ON_ERROR_STOP=1",
+				"--set",
+				"VERBOSITY=verbose",
+				"--username",
+				"postgres",
+				"--dbname",
+				"postgres",
+			],
+			migrationSql(),
+		),
+		runDockerAsync(
+			[
+				"exec",
+				"-i",
+				containerName,
+				"psql",
+				"--set",
+				"ON_ERROR_STOP=1",
+				"--set",
+				"VERBOSITY=verbose",
+				"--username",
+				"postgres",
+				"--dbname",
+				"postgres",
+			],
+			migrationSql(),
+		),
+	]);
 	assertCanonicalState();
 
 	resetFixture();
@@ -243,31 +312,79 @@ async function concurrencyCases(): Promise<void> {
 	`);
 	const before = snapshot();
 	const blocker = runDockerAsync(
-		["exec", "-i", containerName, "psql", "--set", "ON_ERROR_STOP=1", "--set", "VERBOSITY=verbose", "--username", "postgres", "--dbname", "postgres"],
+		[
+			"exec",
+			"-i",
+			containerName,
+			"psql",
+			"--set",
+			"ON_ERROR_STOP=1",
+			"--set",
+			"VERBOSITY=verbose",
+			"--username",
+			"postgres",
+			"--dbname",
+			"postgres",
+		],
 		'BEGIN; LOCK TABLE "MuscleGroup" IN ACCESS EXCLUSIVE MODE; SELECT pg_sleep(11); COMMIT;',
 	);
 	await new Promise((resolve) => setTimeout(resolve, 500));
 	const failure = await runDockerAsync(
-		["exec", "-i", containerName, "psql", "--set", "ON_ERROR_STOP=1", "--set", "VERBOSITY=verbose", "--username", "postgres", "--dbname", "postgres"],
+		[
+			"exec",
+			"-i",
+			containerName,
+			"psql",
+			"--set",
+			"ON_ERROR_STOP=1",
+			"--set",
+			"VERBOSITY=verbose",
+			"--username",
+			"postgres",
+			"--dbname",
+			"postgres",
+		],
 		migrationSql(),
 	).then(
 		() => "success",
 		(error: unknown) => errorText(error),
 	);
 	await blocker;
-	assert(failure.includes("lock timeout"), "competing writer must receive the bounded lock-timeout failure class");
-	assert(snapshot() === before, "competing writer timeout must leave rows unchanged");
+	assert(
+		failure.includes("lock timeout"),
+		"competing writer must receive the bounded lock-timeout failure class",
+	);
+	assert(
+		snapshot() === before,
+		"competing writer timeout must leave rows unchanged",
+	);
 }
 
 async function main(): Promise<void> {
-	runDocker(["run", "--detach", "--rm", "--name", containerName, "--env", "POSTGRES_HOST_AUTH_METHOD=trust", "postgres:15.3"]);
+	runDocker([
+		"run",
+		"--detach",
+		"--rm",
+		"--name",
+		containerName,
+		"--env",
+		"POSTGRES_HOST_AUTH_METHOD=trust",
+		"postgres:15.3",
+	]);
 	try {
 		for (let attempt = 0; attempt < 30; attempt += 1) {
 			try {
-				runDocker(["exec", containerName, "pg_isready", "--username", "postgres"]);
+				runDocker([
+					"exec",
+					containerName,
+					"pg_isready",
+					"--username",
+					"postgres",
+				]);
 				break;
 			} catch {
-				if (attempt === 29) throw new Error("disposable database did not become ready");
+				if (attempt === 29)
+					throw new Error("disposable database did not become ready");
 				await new Promise((resolve) => setTimeout(resolve, 250));
 			}
 		}
@@ -288,6 +405,8 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
 	const message = error instanceof Error ? error.message : "validation failed";
-	process.stderr.write(`reference-data provisioning validation failed: ${message}\n`);
+	process.stderr.write(
+		`reference-data provisioning validation failed: ${message}\n`,
+	);
 	process.exitCode = 1;
 });

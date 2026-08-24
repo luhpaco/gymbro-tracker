@@ -9,7 +9,9 @@ export default function RegisterPage() {
 			<TornStrip.Body>
 				<RegisterForm />
 				<p className='mt-4 text-center'>
-					<span className='text-muted-foreground me-2'>¿Ya tienes una cuenta?</span>
+					<span className='text-muted-foreground me-2'>
+						¿Ya tienes una cuenta?
+					</span>
 					<Link href='/auth/login' className='hover:underline font-semibold'>
 						Inicia sesión aquí.
 					</Link>

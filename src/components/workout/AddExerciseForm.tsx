@@ -81,13 +81,13 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 											role='combobox'
 											className={cn(
 												"w-full justify-between",
-												!field.value && "text-muted-foreground"
+												!field.value && "text-muted-foreground",
 											)}
 										>
 											{field.value
 												? exercisesCreated.find(
-														(exercise) => exercise.id === field.value
-												  )?.name
+														(exercise) => exercise.id === field.value,
+													)?.name
 												: "Selecciona un ejercicio"}
 											<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
 										</Button>
@@ -113,7 +113,7 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 																"mr-2 h-4 w-4",
 																exercise.id === field.value
 																	? "opacity-100"
-																	: "opacity-0"
+																	: "opacity-0",
 															)}
 														/>
 														{exercise.name}
@@ -145,7 +145,7 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 											if (field.value.length > 1) {
 												form.setValue(
 													"sets",
-													field.value.slice(0, field.value.length - 1)
+													field.value.slice(0, field.value.length - 1),
 												);
 											}
 										}}
