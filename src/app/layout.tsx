@@ -43,7 +43,7 @@ export default async function RootLayout({
 					"min-h-screen bg-background font-sans antialiased",
 					fontSans.variable,
 					fontDisplay.variable,
-					fontHand.variable
+					fontHand.variable,
 				)}
 			>
 				{isMaintenance ? (

@@ -25,7 +25,9 @@ export const WorkoutsSection = ({ workoutsToDisplay }: Props) => {
 						<div className='flex flex-col gap-2 text-sm'>
 							<p>Resumen de tu entrenamiento:</p>
 							<div className='flex justify-between items-center'>
-								<p className='text-muted-foreground text-xs'>Nombre del ejercicio</p>
+								<p className='text-muted-foreground text-xs'>
+									Nombre del ejercicio
+								</p>
 								<p className='text-muted-foreground text-xs'>Series</p>
 							</div>
 							{Object.keys(workout.sets).map((exercise) => (

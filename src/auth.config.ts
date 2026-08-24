@@ -20,10 +20,10 @@ export const authConfig: NextAuthConfig = {
 		authorized({ auth, request: { nextUrl } }) {
 			const isLogged = !!auth?.user;
 			const authRoutes = authenticatedRoutes.some((item) =>
-				nextUrl.pathname.includes(item)
+				nextUrl.pathname.includes(item),
 			);
 			const routes = protectedRoutes.some((item) =>
-				nextUrl.pathname.includes(item)
+				nextUrl.pathname.includes(item),
 			);
 
 			if (isLogged && authRoutes) {
@@ -32,7 +32,7 @@ export const authConfig: NextAuthConfig = {
 
 			if (!isLogged && routes) {
 				return Response.redirect(
-					new URL(`/auth/login?origin=${nextUrl.pathname}`, nextUrl)
+					new URL(`/auth/login?origin=${nextUrl.pathname}`, nextUrl),
 				);
 			}
 

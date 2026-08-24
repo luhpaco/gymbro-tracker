@@ -12,12 +12,11 @@ type WorkoutWithSets = Prisma.WorkoutGetPayload<{
 					select: {
 						name: true;
 					};
-					};
 				};
 			};
 		};
-	}
->;
+	};
+}>;
 
 interface GetWorkouts {
 	skip?: number;

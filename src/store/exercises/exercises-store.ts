@@ -18,7 +18,7 @@ export const useExercisesStore = create<Exercises>()((set, get) => ({
 		const { exercises } = get();
 		if (muscle === "all") return set({ filteredExercises: exercises });
 		const filtered = exercises.filter(
-			(exercise) => exercise.muscleGroupTag === muscle
+			(exercise) => exercise.muscleGroupTag === muscle,
 		);
 		return set({ filteredExercises: filtered });
 	},

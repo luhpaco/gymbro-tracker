@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 export const updateExercise = async (
 	exerciseId: string,
 	userId: string,
-	data: UpdateExerciseFormData
+	data: UpdateExerciseFormData,
 ) => {
 	try {
 		const updatedExercise = await prisma.exercise.update({

@@ -6,7 +6,7 @@ import { FormState } from "react-hook-form";
 
 export async function authenticate(
 	prevState: String | undefined,
-	formData: LoginFormValues
+	formData: LoginFormValues,
 ) {
 	// TODO: Clear errors in console
 	try {

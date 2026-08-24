@@ -1,0 +1,17 @@
+{
+	"useTabs": true,
+	"tabWidth": 2,
+	"semi": true,
+	"singleQuote": false,
+	"jsxSingleQuote": true,
+	"trailingComma": "all",
+	"printWidth": 80,
+	"arrowParens": "always",
+	"endOfLine": "lf",
+	"overrides": [
+		{
+			"files": ["*.json", "*.yaml", "*.yml"],
+			"options": { "useTabs": false, "tabWidth": 2 }
+		}
+	]
+}

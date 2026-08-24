@@ -26,42 +26,29 @@ export const WorkoutDetailSets = ({ exerciseName, sets }: Props) => {
 	return (
 		<ol className='flex flex-col gap-2'>
 			{sets.map((set, index) => (
-				<li
-					key={set.id}
-					className='flex items-center justify-between gap-4'
-				>
+				<li key={set.id} className='flex items-center justify-between gap-4'>
 					<div className='flex items-baseline gap-2'>
-						<span className='text-xs text-muted-foreground'>
-							Serie
-						</span>
+						<span className='text-xs text-muted-foreground'>Serie</span>
 						<Stat value={index + 1} width='2ch' />
 					</div>
 					<div className='flex items-baseline gap-2'>
-						<span className='text-xs text-muted-foreground'>
-							Peso
-						</span>
+						<span className='text-xs text-muted-foreground'>Peso</span>
 						<EditableStat
 							value={set.weight}
 							label={`Peso, serie ${index + 1}, ${exerciseName}`}
 							unit='kg'
 							width='4ch'
-							onCommit={(next) =>
-								updateSet({ id: set.id, weight: next })
-							}
+							onCommit={(next) => updateSet({ id: set.id, weight: next })}
 							validate={validateWeight}
 						/>
 					</div>
 					<div className='flex items-baseline gap-2'>
-						<span className='text-xs text-muted-foreground'>
-							Reps
-						</span>
+						<span className='text-xs text-muted-foreground'>Reps</span>
 						<EditableStat
 							value={set.reps}
 							label={`Repeticiones, serie ${index + 1}, ${exerciseName}`}
 							width='4ch'
-							onCommit={(next) =>
-								updateSet({ id: set.id, reps: next })
-							}
+							onCommit={(next) => updateSet({ id: set.id, reps: next })}
 							validate={validateReps}
 						/>
 					</div>

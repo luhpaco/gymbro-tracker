@@ -44,8 +44,14 @@ function runAcceptance(): void {
 function main(): void {
 	runAcceptance();
 
-	assert(migrationAttempts === 1, "migration failure must have exactly one attempt");
-	assert(!acceptanceStarted, "acceptance must not start after migration failure");
+	assert(
+		migrationAttempts === 1,
+		"migration failure must have exactly one attempt",
+	);
+	assert(
+		!acceptanceStarted,
+		"acceptance must not start after migration failure",
+	);
 	assert(!smokeStarted, "smoke must not start after migration failure");
 
 	for (const [effect, count] of Object.entries(effects)) {
