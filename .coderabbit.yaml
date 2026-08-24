@@ -1,0 +1,28 @@
+language: en-US
+reviews:
+  profile: chill
+  auto_review:
+    enabled: true
+  path_filters:
+    - "!design/**"
+    - "!openspec/changes/archive/**"
+    - "!prisma/migrations/**"
+    - "!pnpm-lock.yaml"
+  path_instructions:
+    - path: "src/actions/**/*.ts"
+      instructions: >-
+        Server actions must validate every input with a Zod schema before
+        touching Prisma. Flag raw or untyped input reaching the database.
+    - path: "src/components/**/*.tsx"
+      instructions: >-
+        Components consume the data layer; they must not call Prisma directly.
+        Files are kebab-case or PascalCase per the existing folder convention;
+        imports use the @/ alias.
+    - path: "src/lib/**/*.ts"
+      instructions: >-
+        Shared utilities and Prisma access live here or in src/data/. Keep
+        query logic out of components.
+    - path: "prisma/schema.prisma"
+      instructions: >-
+        Schema changes require a matching migration folder committed together.
+        Never hand-edit generated migration SQL.
