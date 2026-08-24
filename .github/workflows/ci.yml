@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_URL: "postgresql://ci:ci@127.0.0.1:5432/gymbro_ci?schema=public"
+      AUTH_SECRET: "ci-placeholder-not-a-real-secret"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm run format:check
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
+      - run: pnpm exec prisma validate
+      - run: pnpm build

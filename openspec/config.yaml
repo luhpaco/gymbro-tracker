@@ -8,7 +8,7 @@ context: |
   Forms/validation: React Hook Form + Zod
   State: Zustand (exercise, workout, UI stores)
   Architecture: feature-grouped server actions, App Router with RSC, Prisma data layer
-  Linting: ESLint (next/core-web-vitals), no formatter configured
+  Linting: ESLint (next/core-web-vitals), Prettier formatter (see .prettierrc)
 
 rules:
   proposal:
@@ -27,25 +27,25 @@ rules:
       - Follow existing feature-based server actions pattern
       - Keep Prisma queries in lib/ or data/ layer, not in components
       - Use Zod schemas for all server action inputs
-    tdd: false
-    test_command: ""
+    tdd: true
+    test_command: "pnpm test"
   verify:
-    test_command: ""
+    test_command: "pnpm test"
     build_command: "pnpm build"
     coverage_threshold: 0
   archive:
     - Warn before merging destructive deltas
 
 testing:
-  strict_tdd: false
-  reason: "No test runner configured in project"
-  detected: "2026-07-22"
+  strict_tdd: true
+  reason: "Vitest runner configured; Stage 1 covers pure-logic units only (stores, schemas, lib utils)"
+  detected: "2026-08-24"
   runner:
-    available: false
-    framework: none
-    command: ""
+    available: true
+    framework: vitest
+    command: "pnpm test"
   layers:
-    unit: false
+    unit: true
     integration: false
     e2e: false
   coverage:
@@ -61,6 +61,6 @@ testing:
       tool: "TypeScript"
       command: "pnpm exec tsc --noEmit"
     formatter:
-      available: false
-      tool: ""
-      command: ""
+      available: true
+      tool: "Prettier"
+      command: "pnpm run format:check"

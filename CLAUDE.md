@@ -33,7 +33,7 @@ Phases: `proposal` → `spec` → `design` → `tasks` → `apply` → `verify` 
   - Tasks: `openspec/changes/<name>/tasks.md`
   - Archive: deltas synced into `openspec/specs/`
 - **Per-phase rules** (RFC 2119 keywords, Given/When/Then, sequence diagrams, etc.) live in `openspec/config.yaml`. Read that file before each phase.
-- **Strict TDD**: disabled — no test runner is configured. See "Testing" below.
+- **Strict TDD**: enabled — Vitest is configured (Stage 1: pure-logic units only). See "Testing" below.
 
 ## `design/` convention
 
@@ -48,17 +48,16 @@ Phases: `proposal` → `spec` → `design` → `tasks` → `apply` → `verify` 
 
 ## Testing
 
-- **No test runner configured.** `pnpm test` is undefined. `openspec/config.yaml` reflects this (`strict_tdd: false`).
-- **Linter**: `pnpm lint` (ESLint `next/core-web-vitals`).
+- **Runner**: Vitest (`pnpm test` runs once, `pnpm test:watch` watches). Config: `vitest.config.ts` (`environment: "node"`, `vite-tsconfig-paths` for the `@/*` alias). `openspec/config.yaml` reflects this (`strict_tdd: true`, `runner.framework: vitest`).
+- **Scope (Stage 1 — current)**: pure-logic units only, co-located as `*.test.ts` next to their source. Covers Zustand stores (`src/store/**/*-store.ts`), Zod schemas (`src/lib/schemas/workout-set.ts`), and shared utilities (`src/lib/utils.ts`). No component/DOM tests yet — no `jsdom`, `@testing-library/react`, or `jest-dom` installed.
+- **Stage 2 (future, not yet implemented)**: mock-based server-action tests (`src/actions/**`).
+- **Stage 3 (future, not yet implemented)**: Postgres-integration tests against a real service container in CI.
+- **Linter**: `pnpm lint` (ESLint `next/core-web-vitals` + `prettier` last in `extends`, via `eslint-config-prettier`, to disable stylistic rules that could conflict with formatting).
 - **Type checker**: `pnpm exec tsc --noEmit`.
-- **No formatter** configured. Optional: add Prettier.
-- **Build verification (proxy for now)**: `pnpm build` is the closest thing to a gate until a test runner exists. `sdd-verify` runs it.
-- **To enable strict TDD**:
-  1. Install `vitest` + `@testing-library/react` + `@testing-library/jest-dom`.
-  2. Add `test` and `test:watch` scripts in `package.json`.
-  3. Update `openspec/config.yaml` `testing` block: set `strict_tdd: true`, `runner.available: true`, `runner.framework: vitest`, `runner.command: pnpm test`.
-  4. Add a `vitest.config.ts` with the Next.js + React plugin.
-- **Until then**: every SDD task must at least pass `pnpm build` and `pnpm lint`. No "I think it works" without proof.
+- **Formatter**: Prettier. `pnpm run format` writes, `pnpm run format:check` verifies (both route through `git ls-files -co --exclude-standard -z | xargs -0 prettier ...` to avoid `prettier`'s own glob expansion choking on the gitignored `postgres/` Docker volume directory).
+- **CI**: `.github/workflows/ci.yml` runs on every PR targeting `master` (not on push): install → lint → format:check → typecheck → test → `prisma validate` → build, with CI-only placeholder `POSTGRES_URL`/`AUTH_SECRET` env vars (no real secrets, no network/DB access). Advisory only for now — no branch protection rule blocks merge on a red check yet.
+- **Build verification**: `pnpm build` remains the final CI/`sdd-verify` gate.
+- Every SDD task must pass `pnpm test`, `pnpm build`, and `pnpm lint` (`pnpm run format:check` and `pnpm exec tsc --noEmit` too, once touching formatted/typed code). No "I think it works" without proof.
 
 ## Database (Prisma)
 
