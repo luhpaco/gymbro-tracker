@@ -109,17 +109,22 @@ export const SummaryWorkoutForm = ({ exerciseList }: Props) => {
 									<FormControl>
 										<Button
 											variant='outline'
-											className={cn(
-												"w-full pl-3 text-left font-normal",
-												!field.value && "text-muted-foreground",
-											)}
+										className={cn(
+											"w-full pl-3 text-left font-normal",
+											field.value ? "text-foreground" : "text-muted-foreground",
+										)}
 										>
 											{field.value ? (
 												format(field.value, "PPPP")
 											) : (
 												<span>Selecciona una fecha</span>
 											)}
-											<CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+											<CalendarIcon
+												className={cn(
+													"ml-auto h-4 w-4",
+													field.value ? "text-foreground" : "text-muted-foreground",
+												)}
+											/>
 										</Button>
 									</FormControl>
 								</PopoverTrigger>

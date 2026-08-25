@@ -13,7 +13,7 @@
 		--popover: 40 4% 6%;
 		--popover-foreground: 45 20% 94%;
 
-		--primary: 3 78% 53%;
+		--primary: 3 78% 48%;
 		--primary-foreground: 45 30% 96%;
 
 		--secondary: 40 6% 14%;
@@ -25,11 +25,11 @@
 		--accent: 40 6% 18%;
 		--accent-foreground: 45 20% 94%;
 
-		--destructive: 0 70% 45%;
-		--destructive-foreground: 45 30% 96%;
+		--destructive: 0 70% 56%;
+		--destructive-foreground: 40 4% 4%;
 
 		--border: 40 6% 20%;
-		--input: 40 6% 16%;
+		--input: 40 6% 38%;
 		--ring: 3 70% 60%;
 
 		--radius: 0.125rem;
@@ -201,7 +201,7 @@
 		background: transparent;
 		clip-path: none;
 		filter: none;
-		border: 2px dashed hsl(var(--border));
+		border: 2px dashed hsl(var(--input));
 	}
 
 	/* Fixed-region layout: internal churn cannot relayout ancestors. */
