@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".claude/rules/testing.md",
+    ".claude/rules/database.md",
+    ".claude/rules/notion-backlog.md"
+  ],
+  "mcp": {
+    "agent-browser": {
+      "type": "local",
+      "command": ["agent-browser", "mcp"],
+      "enabled": true
+    }
+  }
+}

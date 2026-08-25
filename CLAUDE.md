@@ -1,121 +1,66 @@
 # CLAUDE.md — gymbro-tracker
 
-Source of truth for how the user, Claude Code, and OpenCode collaborate on this project. Read this first; the rest of the doc references it.
+Source of truth for how the user, Claude Code, and OpenCode collaborate on this project. Full stack detail lives in `openspec/config.yaml`; this file covers process and hard rules only.
 
 ## Project context
 
-- **What**: workout tracking app.
-- **Stack**: Next.js 15.x (App Router with RSC), React 19, TypeScript 5 (strict), pnpm.
-- **Database**: PostgreSQL 15.3 via Docker Compose, Prisma ORM 5.18.0.
-- **Auth**: Next-Auth 5 (`5.0.0-beta.32`, Credentials provider, middleware-protected routes).
-- **UI**: Tailwind CSS 3.4, shadcn/ui (Radix UI primitives), `class-variance-authority`, `lucide-react`, `react-icons`.
-- **Forms / validation**: React Hook Form + Zod.
-- **State**: Zustand (exercise, workout, UI stores).
-- **Architecture**: feature-grouped server actions, App Router with RSC, Prisma data layer.
+Workout tracking app. Next.js 15 (App Router/RSC) + React 19 + TypeScript strict + Prisma/PostgreSQL. Full stack detail: `openspec/config.yaml`.
 
 ## Dual-agent workflow
 
 - **User** — final decision-maker. Approves scope, breaks ties, owns delivery.
-- **Claude Code (this agent)** — planning, validation, verification. Reads sub-agent output, runs gates, never trusts "done" summaries without proof.
-- **OpenCode (sub-agent)** — execution, implementation, code-writing. Delegated by Claude Code through the `task` tool.
+- **Claude Code (this agent)** — planning, validation, verification.
+- **OpenCode (sub-agent)** — execution, implementation. Delegated via the `task` tool.
 - **Pattern**: User → Claude Code plans (`/sdd-new`, `/sdd-ff`) → OpenCode executes (`/sdd-apply`) → Claude Code verifies (`/sdd-verify`) → archive (`/sdd-archive`).
-- **Handoffs** happen in `design/` (see below). Real artifacts live in `openspec/`.
+- Mid-task handoffs go in `design/` — see `design/README.md` before writing there.
 
 ## SDD loop
 
-Phases: `proposal` → `spec` → `design` → `tasks` → `apply` → `verify` → `archive`.
+Backend: hybrid (Engram + OpenSpec under `openspec/changes/<name>/`). Per-phase rules: `openspec/config.yaml`. The SDD procedure itself (phases, commands, preflight) is owned by gentle-ai's global workflow — not repeated here.
 
-- **Artifact store**: hybrid (Engram + OpenSpec). Engram for cross-session memory; OpenSpec for the team-shareable trail.
-- **Per-phase artifacts** (when using OpenSpec backend):
-  - Proposal: `openspec/changes/<name>/proposal.md`
-  - Spec: `openspec/changes/<name>/specs/`
-  - Design: `openspec/changes/<name>/design.md`
-  - Tasks: `openspec/changes/<name>/tasks.md`
-  - Archive: deltas synced into `openspec/specs/`
-- **Per-phase rules** (RFC 2119 keywords, Given/When/Then, sequence diagrams, etc.) live in `openspec/config.yaml`. Read that file before each phase.
-- **Strict TDD**: enabled — Vitest is configured (Stage 1: pure-logic units only). See "Testing" below.
+**Do not bypass SDD for "small" changes.** If something is truly out-of-band (typo, dead-code removal), log it in the Notion backlog as `Tipo: Housekeeping` first, then execute.
 
-## `design/` convention
+## Testing & database
 
-`design/` is a gitignored scratch space for inter-agent handoffs. The full rules (what goes in, what does not, naming, multi-machine caveat) are in `design/README.md`. Read that file before writing anything into `design/`.
+- `pnpm test` / `pnpm build` / `pnpm lint` / `pnpm run format:check` / `pnpm exec tsc --noEmit` are CI-enforced gates on every PR into `master` (branch protection requires the `verify` check — merge is blocked on failure, not just advisory).
+- Current test scope (Vitest Stage 1): pure-logic units only — Zustand stores, Zod schemas, `src/lib/utils.ts`. No component/DOM tests yet.
+- Full testing detail: `@.claude/rules/testing.md`.
+- Prisma schema-change workflow (migration steps, hard rules): `@.claude/rules/database.md` — read before editing `prisma/schema.prisma`.
 
 ## Notion backlog
 
-- **Source of truth for tasks**: [Gymbro Tracker — Backlog](https://app.notion.com/p/aff05be5327d4b68b2e9969339c94fac).
-- **Schema**: `Tarea` (title) / `Status` (Sin empezar, En curso, Listo) / `Prioridad` (Alta, Media, Baja) / `Tipo` (Feature, Bug, Housekeeping, Decisión) / `Owner` (Claude, OpenCode, Sin asignar) / `Fase / Referencia` (text) / `Notas` (text).
-- **MCP**: hosted at `https://mcp.notion.com/mcp` (OAuth). No token lives in this repo or in `opencode.json`. Do not add one.
-- **Sync with SDD**: when a Notion task starts, change `Status` to `En curso` and `Owner` to whoever is executing. When done, `Listo`. The `Fase / Referencia` column is the link to the SDD change folder (e.g., `openspec/changes/exercise-delete-state/`).
+Source of truth for tasks: Gymbro Tracker — Backlog. Schema and status-sync rules: `@.claude/rules/notion-backlog.md`.
 
-## Testing
+## Hard rules
 
-- **Runner**: Vitest (`pnpm test` runs once, `pnpm test:watch` watches). Config: `vitest.config.ts` (`environment: "node"`, `vite-tsconfig-paths` for the `@/*` alias). `openspec/config.yaml` reflects this (`strict_tdd: true`, `runner.framework: vitest`).
-- **Scope (Stage 1 — current)**: pure-logic units only, co-located as `*.test.ts` next to their source. Covers Zustand stores (`src/store/**/*-store.ts`), Zod schemas (`src/lib/schemas/workout-set.ts`), and shared utilities (`src/lib/utils.ts`). No component/DOM tests yet — no `jsdom`, `@testing-library/react`, or `jest-dom` installed.
-- **Stage 2 (future, not yet implemented)**: mock-based server-action tests (`src/actions/**`).
-- **Stage 3 (future, not yet implemented)**: Postgres-integration tests against a real service container in CI.
-- **Linter**: `pnpm lint` (ESLint `next/core-web-vitals` + `prettier` last in `extends`, via `eslint-config-prettier`, to disable stylistic rules that could conflict with formatting).
-- **Type checker**: `pnpm exec tsc --noEmit`.
-- **Formatter**: Prettier. `pnpm run format` writes, `pnpm run format:check` verifies (both route through `git ls-files -co --exclude-standard -z | xargs -0 prettier ...` to avoid `prettier`'s own glob expansion choking on the gitignored `postgres/` Docker volume directory).
-- **CI**: `.github/workflows/ci.yml` runs on every PR targeting `master` (not on push): install → lint → format:check → typecheck → test → `prisma validate` → build, with CI-only placeholder `POSTGRES_URL`/`AUTH_SECRET` env vars (no real secrets, no network/DB access). Advisory only for now — no branch protection rule blocks merge on a red check yet.
-- **Build verification**: `pnpm build` remains the final CI/`sdd-verify` gate.
-- Every SDD task must pass `pnpm test`, `pnpm build`, and `pnpm lint` (`pnpm run format:check` and `pnpm exec tsc --noEmit` too, once touching formatted/typed code). No "I think it works" without proof.
-
-## Database (Prisma)
-
-- **Schema**: `prisma/schema.prisma`. Connection via `POSTGRES_URL` in `.env` (gitignored; use `.env.template` as reference).
-- **Models** (current): `User`, `MuscleGroup`, `Exercise`, `Workout`, `Set`. Enums: `Role`.
-- **Workflow for schema changes**:
-  1. Edit `prisma/schema.prisma`.
-  2. `pnpm exec prisma migrate dev --name <descriptive-name>` — generates and applies a migration.
-  3. Verify `prisma/migrations/<timestamp>_<name>/migration.sql` reads correctly.
-  4. The Prisma client auto-regenerates. If not, `pnpm exec prisma generate`.
-  5. Run the dev DB locally: `docker compose up -d`.
-  6. Commit the schema change AND the migration folder together.
-- **Hard rules**:
-  - **Never edit generated migration files manually** — they will be reapplied incorrectly on the next `migrate dev`. Roll forward with a new migration instead.
-  - **Never commit `.env`** — it contains `POSTGRES_URL` and `AUTH_SECRET`. `.env.template` is the safe template.
-  - **Prisma queries stay in `src/lib/` or `src/data/`** — not in components. Components consume the data layer; they do not query directly.
-  - **Server actions live in `src/actions/<feature>.ts`** and always validate input with Zod before touching the DB.
-
-## Hard rules (applies to every agent)
-
-1. **Never trust "task done" summaries** — verify with `git log`, `git diff`, or actually running the relevant command. If a sub-agent says a task is complete, prove it before moving on.
-2. **Tokens / secrets stay in `.env`** (gitignored) or in OAuth flows. Never in source code, never in `design/`, never in commit messages, never in `opencode.json`.
-3. **Notion MCP uses hosted OAuth** — do not add a token to `opencode.json` or to any file in this repo. The previous local-stdio + wrapper pattern was deleted on 2026-07-22; do not reintroduce it.
-4. **Real artifacts in `openspec/changes/<name>/`. `design/` is for drafts and handoffs only.** Do not commit `design/` content. Do not move SDD artifacts into `design/`.
-5. **Do not bypass SDD for "small" changes** — the discipline is the value. If something is truly out-of-band (typo, dead-code removal), log it in the Notion backlog as `Tipo: Housekeeping` first, then execute.
-6. **Keep Prisma queries in the data layer.** Components consume, never query.
-7. **Server actions validate with Zod** — no raw `request.json()` or untyped inputs reaching Prisma.
+1. **Never trust "task done" summaries** — verify with `git log`, `git diff`, or by running the command yourself.
+2. **Secrets stay in `.env`** (gitignored) or OAuth flows — never in source, `design/`, commit messages, or `opencode.json`. Notion MCP uses hosted OAuth; do not reintroduce a local-token pattern.
+3. **Real SDD artifacts live in `openspec/changes/<name>/`.** `design/` is drafts/handoffs only, never committed.
+4. **Prisma queries stay in `src/lib/` or `src/data/`** — components consume, never query directly.
+5. **Server actions validate with Zod** before touching the DB — no raw `request.json()` or untyped input reaching Prisma.
+6. **Never hand-edit a generated migration file** — roll forward with a new `prisma migrate dev` instead.
 
 ## Useful commands
 
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Start dev server (http://localhost:3000) |
-| `pnpm build` | Production build (used as verify gate) |
-| `pnpm start` | Run production build |
+| `pnpm build` | Production build (verify gate) |
 | `pnpm lint` | ESLint |
 | `pnpm exec tsc --noEmit` | Type check |
 | `pnpm seed` | Seed DB |
 | `docker compose up -d` | Start PostgreSQL |
-| `docker compose down` | Stop PostgreSQL |
 | `pnpm exec prisma studio` | Browse DB in browser |
 | `pnpm exec prisma migrate dev --name <name>` | Create + apply migration |
-| `pnpm exec prisma generate` | Regenerate Prisma client |
-| `pnpm exec prisma format` | Format `schema.prisma` |
 
 ## Conventions
 
-- **File naming**: kebab-case for files, PascalCase for components and types.
-- **Components**: feature-grouped under `src/components/<feature>/`.
-- **Server actions**: `src/actions/<feature>.ts`, always with Zod input validation.
-- **Data layer**: `src/lib/` for shared utilities, `src/data/` for Prisma queries.
-- **Imports**: use the `@/` alias for `src/`.
-- **DB models**: plural-table names in the schema; singular TS class names (`model User`, `model Exercise`).
-- **Enums**: PascalCase enum names, UPPER_CASE values (`enum Role { USER ADMIN }`).
+- DB models: plural table names in schema, singular TS class names (`model User`, `model Exercise`).
+- Enums: PascalCase enum names, UPPER_CASE values (`enum Role { USER ADMIN }`).
+- Server actions: `src/actions/<feature>.ts`.
 
 ## Where to start
 
 - New task in the Notion backlog? Read the task, then run `/sdd-new <change-name>`.
 - Mid-task? Check `openspec/changes/` for the active change and read its `proposal.md`.
 - Confused about the workflow? Read `openspec/config.yaml` and `design/README.md`.
-- Stuck on tooling? Read the relevant skill (`/sdd-init`, `/sdd-apply`, etc.) before improvising.
