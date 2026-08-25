@@ -26,7 +26,7 @@ export const SummaryWorkout = () => {
 		<TornStrip className='flex flex-col gap-4'>
 			<div>
 				<h2>Resumen de tu entrenamiento</h2>
-				<p className='text-xs text-muted-foreground mt-2'>
+				<p className='text-xs text-card-foreground/70 mt-2'>
 					Revisa los ejercicios que has agregado y sus características.
 				</p>
 			</div>
@@ -71,7 +71,7 @@ export const SummaryWorkout = () => {
 													<TornStrip flat className='h-full flex items-center'>
 														<div className='flex w-full items-center justify-between'>
 															<div className='flex items-baseline gap-2'>
-																<span className='text-xs text-muted-foreground'>
+																<span className='text-xs text-card-foreground/70'>
 																	Peso
 																</span>
 																<EditableStat
@@ -87,7 +87,7 @@ export const SummaryWorkout = () => {
 																/>
 															</div>
 															<div className='flex items-baseline gap-2'>
-																<span className='text-xs text-muted-foreground'>
+																<span className='text-xs text-card-foreground/70'>
 																	Reps
 																</span>
 																<EditableStat
@@ -112,7 +112,7 @@ export const SummaryWorkout = () => {
 						})}
 					</div>
 				) : (
-					<p className='text-xs text-center text-muted-foreground'>
+					<p className='text-xs text-center text-card-foreground/70'>
 						Aquí se mostrarán los ejercicios que vas registrando en tu
 						entrenamiento.
 					</p>
