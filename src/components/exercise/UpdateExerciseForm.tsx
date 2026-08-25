@@ -142,7 +142,7 @@ export const UpdateExerciseForm = ({
 				/>
 				<Button
 					type='submit'
-					className='w-full disabled:opacity-35'
+					className='w-full'
 					disabled={form.formState.isSubmitting}
 				>
 					{form.formState.isSubmitting ? (

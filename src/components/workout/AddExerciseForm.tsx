@@ -89,7 +89,7 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 														(exercise) => exercise.id === field.value,
 													)?.name
 												: "Selecciona un ejercicio"}
-											<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+											<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 text-muted-foreground' />
 										</Button>
 									</FormControl>
 								</PopoverTrigger>
@@ -139,7 +139,6 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 									<Button
 										size='icon'
 										type='button'
-										className='disabled:opacity-50'
 										disabled={field.value.length <= 1}
 										onClick={() => {
 											if (field.value.length > 1) {
@@ -160,7 +159,6 @@ export const AddExerciseForm = ({ exercisesCreated }: Props) => {
 									<Button
 										size='icon'
 										type='button'
-										className='disabled:opacity-50'
 										disabled={field.value.length >= 5}
 										onClick={() => {
 											if (field.value.length < 5) {
