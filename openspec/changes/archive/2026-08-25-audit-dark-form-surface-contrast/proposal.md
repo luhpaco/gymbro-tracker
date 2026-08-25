@@ -36,7 +36,7 @@ Apply the smallest token or presentation-class changes required by the named flo
 |---|---|---|
 | `src/app/globals.css` | Modified | Targeted semantic foreground or border tokens, if required. |
 | `src/components/ui/{button,calendar}.tsx` | Modified | Presentation of the outlined trigger, primary action, and calendar states. |
-| `src/components/workout/{DialogAddExercise,SummaryWorkoutForm}.tsx` | Modified | Targeted workout-create metadata and pending-reservation presentation. |
+| `src/components/workout/{SummaryWorkout,SummaryWorkoutForm}.tsx` | Modified | Targeted workout-create metadata and pending-reservation presentation. |
 
 ## Risks
 

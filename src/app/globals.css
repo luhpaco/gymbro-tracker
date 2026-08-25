@@ -29,7 +29,7 @@
 		--destructive-foreground: 40 4% 4%;
 
 		--border: 40 6% 20%;
-		--input: 40 6% 38%;
+		--input: 40 6% 16%;
 		--ring: 3 70% 60%;
 
 		--radius: 0.125rem;
@@ -198,10 +198,11 @@
 
 	/* Dashed empty "pending" slot — no fill, no clip, signals an unfilled strip. */
 	.torn-strip--ghost {
+		--ghost-border: 40 6% 38%;
 		background: transparent;
 		clip-path: none;
 		filter: none;
-		border: 2px dashed hsl(var(--input));
+		border: 2px dashed hsl(var(--ghost-border));
 	}
 
 	/* Fixed-region layout: internal churn cannot relayout ancestors. */
