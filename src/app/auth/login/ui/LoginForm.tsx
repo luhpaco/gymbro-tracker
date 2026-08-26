@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 
 export const LoginFormSchema = z.object({
@@ -27,7 +28,24 @@ export const LoginFormSchema = z.object({
 
 export type LoginFormValues = z.infer<typeof LoginFormSchema>;
 
-export const LoginForm = () => {
+function isValidOrigin(origin: string | null): string | null {
+	if (!origin) return null;
+	// Only allow same-origin absolute paths (no //, no http, must start with /)
+	if (!origin.startsWith("/")) return null;
+	if (origin.startsWith("//")) return null;
+	if (origin.includes(":")) return null;
+	// Basic path validation — allow / and /path and /path?query
+	try {
+		// Use dummy base to validate
+		const url = new URL(origin, "http://localhost");
+		if (url.origin !== "http://localhost") return null;
+		return url.pathname + url.search + url.hash;
+	} catch {
+		return null;
+	}
+}
+
+function LoginFormInner() {
 	const form = useForm<LoginFormValues>({
 		resolver: zodResolver(LoginFormSchema),
 		defaultValues: {
@@ -37,6 +55,10 @@ export const LoginForm = () => {
 	});
 	const [authStatus, setAuthStatus] = useState<String | null>(null);
 	const { toast } = useToast();
+	const searchParams = useSearchParams();
+	const originParam = searchParams.get("origin");
+	const validatedOrigin = isValidOrigin(originParam);
+
 	const onSubmit = async (values: LoginFormValues) => {
 		const result = await authenticate(undefined, values);
 		setAuthStatus(result);
@@ -48,10 +70,8 @@ export const LoginForm = () => {
 				title: "Inicio de sesión exitoso",
 				description: "Bienvenido de vuelta",
 			});
-			// router.replace("/dashboard");
-			window.location.replace("/dashboard");
+			window.location.replace(validatedOrigin ?? "/dashboard");
 		}
-		// TODO: Define the error message for invalid credentials {email or password or both}
 		if (authStatus === "InvalidCredentials") {
 			form.setError("email", {
 				type: "manual",
@@ -62,7 +82,7 @@ export const LoginForm = () => {
 				message: "Credenciales inválidas",
 			});
 		}
-	}, [authStatus]);
+	}, [authStatus, validatedOrigin, toast, form]);
 
 	return (
 		<Form {...form}>
@@ -113,5 +133,15 @@ export const LoginForm = () => {
 				</Button>
 			</form>
 		</Form>
+	);
+}
+
+export const LoginForm = () => {
+	return (
+		<Suspense
+			fallback={<div className='w-full space-y-8 animate-pulse h-48' />}
+		>
+			<LoginFormInner />
+		</Suspense>
 	);
 };

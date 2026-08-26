@@ -9,11 +9,14 @@ interface Props {
 	}>;
 }
 
+import { redirect } from "next/navigation";
+
 export default async function UpdateExercisePage({ params }: Props) {
 	const { id } = await params;
-	const muscleGroups = await getMuscleGroups();
 	const session = await auth();
-	const exercise = await getExerciseById(id, session!.user.id);
+	if (!session) return redirect(`/auth/login?origin=/exercises/update/${id}`);
+	const muscleGroups = await getMuscleGroups();
+	const exercise = await getExerciseById(id, session.user.id);
 	if (!exercise) return <div>Exercise not found</div>;
 	return (
 		<section className='flex flex-col gap-6'>
@@ -33,7 +36,9 @@ export default async function UpdateExercisePage({ params }: Props) {
 				</div>
 			</TornStrip>
 			<div className='flex justify-center items-center'>
-				<ReturnButton variant='link'>Regresar</ReturnButton>
+				<ReturnButton variant='link' fallbackHref='/exercises'>
+					Regresar
+				</ReturnButton>
 			</div>
 		</section>
 	);

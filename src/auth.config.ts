@@ -4,6 +4,7 @@ const protectedRoutes = [
 	"/dashboard",
 	"/exercises",
 	"/exercises/create",
+	"/exercises/update",
 	"/workouts",
 	"/workouts/create",
 ];
@@ -19,11 +20,13 @@ export const authConfig: NextAuthConfig = {
 	callbacks: {
 		authorized({ auth, request: { nextUrl } }) {
 			const isLogged = !!auth?.user;
-			const authRoutes = authenticatedRoutes.some((item) =>
-				nextUrl.pathname.includes(item),
+			const authRoutes = authenticatedRoutes.some(
+				(item) =>
+					nextUrl.pathname === item || nextUrl.pathname.startsWith(item + "/"),
 			);
-			const routes = protectedRoutes.some((item) =>
-				nextUrl.pathname.includes(item),
+			const routes = protectedRoutes.some(
+				(item) =>
+					nextUrl.pathname === item || nextUrl.pathname.startsWith(item + "/"),
 			);
 
 			if (isLogged && authRoutes) {
