@@ -1,2 +1,14 @@
+# .worktreeinclude — files worktree-provision.sh copies from the main
+# checkout into a freshly created sibling worktree.
+#
+# Format:
+#   - One repo-relative path per line.
+#   - Blank lines and lines starting with `#` are ignored.
+#   - Directories are copied recursively (cp -a), symlinks are preserved.
+#   - A missing source path is a warning, not a failure.
+#   - Never list anything duplicating a secret outside .env*; the copy step
+#     always chmod 0600 every copied .env* file.
 .env
 .env.local
+.mcp.json
+.claude/skills/agent-browser

@@ -31,6 +31,10 @@ Backend: hybrid (Engram + OpenSpec under `openspec/changes/<name>/`). Per-phase 
 
 Source of truth for tasks: Gymbro Tracker — Backlog. Schema and status-sync rules: `@.claude/rules/notion-backlog.md`.
 
+## Worktrees
+
+Isolated git worktrees (concurrent Claude/OpenCode sessions, DB-isolated tasks, long-running branches) use `git worktree add` + `scripts/worktree-provision.sh` as the primary mechanism, torn down with `scripts/worktree-cleanup.sh`. Full decision guide, naming convention, and known limits: `@.claude/rules/worktrees.md`.
+
 ## Hard rules
 
 1. **Never trust "task done" summaries** — verify with `git log`, `git diff`, or by running the command yourself.
@@ -49,9 +53,11 @@ Source of truth for tasks: Gymbro Tracker — Backlog. Schema and status-sync ru
 | `pnpm lint` | ESLint |
 | `pnpm exec tsc --noEmit` | Type check |
 | `pnpm seed` | Seed DB |
-| `docker compose up -d` | Start PostgreSQL |
+| `podman compose up -d` | Start PostgreSQL (only `podman` is installed; `docker compose` is not) |
 | `pnpm exec prisma studio` | Browse DB in browser |
 | `pnpm exec prisma migrate dev --name <name>` | Create + apply migration |
+| `scripts/worktree-provision.sh <path>` | Provision a sibling worktree: copy env files, install, start DB, migrate, CodeGraph init, prove dev server compiles |
+| `scripts/worktree-cleanup.sh <path> [--force]` | Tear down a worktree's container stack + CodeGraph index + directory (never deletes the branch) |
 
 ## Conventions
 
