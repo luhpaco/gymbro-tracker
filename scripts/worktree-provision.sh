@@ -134,7 +134,12 @@ copy_manifest_entries() {
     fi
 
     mkdir -p "$(dirname "$dst")"
-    if ! cp -a "$src" "$dst"; then
+    if [ -d "$src" ] && [ ! -L "$src" ]; then
+      if ! { mkdir -p "$dst" && cp -a "$src"/. "$dst"; }; then
+        err "failed to copy manifest entry: $entry"
+        exit 4
+      fi
+    elif ! cp -a "$src" "$dst"; then
       err "failed to copy manifest entry: $entry"
       exit 4
     fi
@@ -485,6 +490,15 @@ log "dev server responded healthy on port $DEV_PORT"
 # --- step 13: success cleanup -----------------------------------------------
 
 kill_dev_pids
+
+# The repository's agent-browser skill is a tracked directory. A provisioning
+# run may leave a generated symlink at this path, so remove only that symlink;
+# never delete the tracked directory or any unrelated untracked files.
+AGENT_BROWSER_ARTIFACT="$WT/.agents/skills/agent-browser"
+if [ -L "$AGENT_BROWSER_ARTIFACT" ]; then
+  rm -f "$AGENT_BROWSER_ARTIFACT"
+fi
+
 rm -f "$DEV_LOG"
 
 log "worktree provisioned successfully: $WT"

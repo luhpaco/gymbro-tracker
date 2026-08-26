@@ -60,7 +60,7 @@ New worktree directories flatten the branch name's `/` to `-` (e.g. branch `fix/
 
 `.worktreeinclude`, in the main checkout root, lists one repo-relative path per line; `worktree-provision.sh` copies each into the target worktree.
 
-```
+```text
 # Comments and blank lines are ignored.
 # One repo-relative path per line. Directories are copied recursively.
 .env

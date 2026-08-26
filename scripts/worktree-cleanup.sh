@@ -108,14 +108,19 @@ fi
 
 # --- teardown order: compose down -> codegraph uninit -> worktree remove --
 
-if [ -n "$RUNTIME" ] && [ -f "$WT/docker-compose.yml" ]; then
+if [ -f "$WT/docker-compose.yml" ]; then
+  if [ -z "$RUNTIME" ]; then
+    err "docker-compose.yml exists but no compatible container runtime was detected; refusing to remove the worktree"
+    exit 4
+  fi
+
   log "tearing down container stack ($RUNTIME compose down)"
   if ! (cd "$WT" && "$RUNTIME" compose down); then
     err "$RUNTIME compose down failed"
     exit 4
   fi
 else
-  warn "no container runtime detected or no docker-compose.yml in worktree, skipping compose down"
+  warn "no docker-compose.yml in worktree, skipping compose down"
 fi
 
 if [ -d "$WT/.codegraph" ]; then
