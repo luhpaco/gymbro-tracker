@@ -23,20 +23,23 @@ export const getWorkoutBySlug = async (slug: string, userId: string) => {
 				},
 			},
 		});
+		if (!workout) return null;
 		const workoutDetail = {
-			id: workout?.id,
-			name: workout?.name,
-			date: workout?.date,
-			tag: workout?.tag,
-			sets: workout?.sets.reduce((acc: GroupedData, item: DataItem) => {
+			id: workout.id,
+			name: workout.name,
+			date: workout.date,
+			tag: workout.tag,
+			sets: (workout.sets ?? []).reduce((acc: GroupedData, item: DataItem) => {
 				const exerciseName = item.exercise.name;
 				if (!acc[exerciseName]) {
 					acc[exerciseName] = [];
 				}
 				acc[exerciseName].push(item);
 				return acc;
-			}, {}),
+			}, {} as GroupedData),
 		};
 		return workoutDetail;
-	} catch (error) {}
+	} catch (error) {
+		return null;
+	}
 };

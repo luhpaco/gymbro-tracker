@@ -15,21 +15,23 @@ interface Props {
 export default async function WorkoutDetailPage({ params }: Props) {
 	const { slug } = await params;
 	const session = await auth();
-	if (!session) return redirect("/login");
-	const workoutDetail = (await getWorkoutBySlug(
+	if (!session) return redirect(`/auth/login?origin=/workouts/${slug}`);
+	const workoutDetail = await getWorkoutBySlug(
 		decodeURIComponent(slug),
 		session.user.id,
-	)) as WorkoutDetail;
+	);
 
 	if (!workoutDetail) redirect("/workouts");
+	const displayDate = workoutDetail.date
+		? new Date(workoutDetail.date).toLocaleDateString()
+		: "";
+	const setsByExercise = (workoutDetail.sets ?? {}) as WorkoutDetail["sets"];
 	return (
 		<section>
 			<h1>Entrenamiento: {workoutDetail.name}</h1>
-			<p className='text-muted-foreground mt-2'>
-				Fecha: {workoutDetail.date.toLocaleDateString()}
-			</p>
+			<p className='text-muted-foreground mt-2'>Fecha: {displayDate}</p>
 			<div className='my-5 flex flex-col gap-4'>
-				{Object.entries(workoutDetail.sets).map(([exerciseName, sets]) => (
+				{Object.entries(setsByExercise).map(([exerciseName, sets]) => (
 					<TornStrip key={exerciseName} seed={exerciseName}>
 						<TornStrip.Header title={exerciseName} />
 						<TornStrip.Body>
@@ -39,7 +41,7 @@ export default async function WorkoutDetailPage({ params }: Props) {
 				))}
 			</div>
 			<div className='flex justify-center items-center'>
-				<ReturnButton>Regresar</ReturnButton>
+				<ReturnButton fallbackHref='/workouts'>Regresar</ReturnButton>
 			</div>
 		</section>
 	);
