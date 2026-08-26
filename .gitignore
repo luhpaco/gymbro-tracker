@@ -49,3 +49,9 @@ next-env.d.ts
 /.playwright-mcp/
 /.codegraph/
 /.impeccable/
+
+# worktree-provision.sh dev-server health-check log (kept only on failure)
+/.worktree-dev.log
+
+# worktree-provision.sh per-worktree assigned port pair (persistent, never removed by the script)
+/.worktree-port
