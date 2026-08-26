@@ -1,6 +1,5 @@
 // Global components
-export { Sidebar } from "./Sidebar";
-export { Header } from "./Header";
+export { AuthenticatedNavigationShell } from "./navigation/AuthenticatedNavigationShell";
 export { ReturnButton } from "./ReturnButton";
 
 // Exercises

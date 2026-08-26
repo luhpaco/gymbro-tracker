@@ -1,5 +1,5 @@
-import { Header } from "@/components";
 import { Breadcrumbs } from "@/components/breadcrumbs/Breadcrumbs";
+import { AuthenticatedNavigationShell } from "@/components/navigation/AuthenticatedNavigationShell";
 
 export default function RoutesLayout({
 	children,
@@ -7,10 +7,9 @@ export default function RoutesLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<>
-			<Header />
+		<AuthenticatedNavigationShell>
 			<Breadcrumbs />
 			<main className='w-full h-full p-6'>{children}</main>
-		</>
+		</AuthenticatedNavigationShell>
 	);
 }

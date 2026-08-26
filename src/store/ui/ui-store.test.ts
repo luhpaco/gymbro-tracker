@@ -3,7 +3,7 @@ import { useUIStore } from "./ui-store";
 
 describe("useUIStore", () => {
 	beforeEach(() => {
-		useUIStore.setState({ isDialogOpen: false, isSidebarOpen: false });
+		useUIStore.setState({ isDialogOpen: false });
 	});
 
 	it("opens and closes the dialog", () => {
@@ -12,14 +12,5 @@ describe("useUIStore", () => {
 
 		useUIStore.getState().closeDialog();
 		expect(useUIStore.getState().isDialogOpen).toBe(false);
-	});
-
-	it("opens and closes the sidebar without affecting the dialog", () => {
-		useUIStore.getState().openSidebar();
-		expect(useUIStore.getState().isSidebarOpen).toBe(true);
-		expect(useUIStore.getState().isDialogOpen).toBe(false);
-
-		useUIStore.getState().closeSidebar();
-		expect(useUIStore.getState().isSidebarOpen).toBe(false);
 	});
 });

@@ -45,12 +45,23 @@ Dashboard, exercises (list/filter/create/update), workouts (list/create/detail),
 
 ### Requirement: Navigation Token Compliance
 
-`Header.tsx` and `Sidebar.tsx` MUST use token-driven surfaces with no dead `dark:` variants or light-mode `bg-white` fallbacks.
+The authenticated navigation shell MUST render token-driven dock, Create chooser, and desktop rail surfaces with no dead `dark:` variants or light-mode `bg-white` fallbacks. It MUST replace the header/hamburger sidebar presentation while preserving the Athletic Tape & Wrap visual identity.
 
-#### Scenario: Dead dark: variants removed
-- GIVEN no theme toggle exists in the app
-- WHEN inspecting `Header.tsx` and `Sidebar.tsx`
-- THEN no `dark:` variant or `bg-white` fallback class remains
+(Previously: `Header.tsx` and `Sidebar.tsx` were required to use token-driven surfaces without dead `dark:` variants or light-mode fallbacks.)
+
+#### Scenario: Responsive chrome uses design tokens
+
+- GIVEN an authenticated user views the dock, Create chooser, or desktop rail
+- WHEN the surface is inspected at its applicable viewport
+- THEN it MUST use the established token-driven presentation
+- AND it MUST NOT include a `dark:` variant or `bg-white` fallback
+
+#### Scenario: Legacy hamburger chrome is replaced
+
+- GIVEN the authenticated navigation shell has rendered
+- WHEN a user views mobile or desktop navigation
+- THEN dock or rail chrome MUST provide the navigation presentation
+- AND the header/hamburger sidebar presentation MUST NOT be shown
 
 ### Requirement: Inline Edit in Workout Creation Summary
 
