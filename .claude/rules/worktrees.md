@@ -23,6 +23,25 @@ scripts/worktree-cleanup.sh ../gymbro-tracker-worktrees/<name> --force  # discar
 
 `worktree-provision.sh` copies gitignored files, runs `pnpm install`, starts the container stack, waits for Postgres, runs `prisma migrate deploy`, initializes CodeGraph if missing, then proves the dev server actually compiles and responds (HTTP 200 or a "Ready" log line) before exiting 0. It is idempotent: re-running skips or converges every already-satisfied step, and a mid-run failure leaves state as-is — just re-run to resume.
 
+## Port isolation
+
+Each worktree gets its own Postgres host port (scanned upward from 5433, range 5433–5443) and dev-server port (scanned upward from 3001, range 3001–3011), so multiple worktrees' stacks and dev servers can run simultaneously without colliding with the main checkout's defaults (Postgres `5432`, dev server `3000`) or with each other's stacks.
+
+- **Assignment**: ports are resolved in one step, right after container-runtime detection. A fresh worktree scans each range upward for the first free port; a worktree with an existing `.worktree-port` file reuses its persisted pair verbatim — tolerating its own already-running stack/dev-server on that port — instead of re-scanning.
+- **`.worktree-port`**: worktree-root, gitignored (`/.worktree-port`), exactly two lines, `KEY=VALUE`, never sourced or `eval`'d — parsed with an anchored `grep -E '^KEY=[0-9]+$'` plus a range check.
+  ```
+  POSTGRES_HOST_PORT=5433
+  DEV_PORT=3001
+  ```
+  A missing, malformed, or out-of-range value is treated as absent and triggers a fresh scan rather than executing untrusted file content. It is never removed by either script — it dies with the worktree directory when `git worktree remove` runs.
+- **`.env` rewrite**: after the manifest copy, the worktree's own copied `.env` gets `POSTGRES_HOST_PORT` set to the assigned port and its `POSTGRES_URL`'s port segment rewritten to match. Every other copied `.env*` file that also has a `POSTGRES_URL=` line (in practice, `.env.local`) gets the same port-segment rewrite, since Next.js resolves `.env.local` ahead of `.env` — but `.env.local` never gains a `POSTGRES_HOST_PORT` line, since only `.env` is read by the container runtime. None of this ever touches the main checkout's own `.env`/`.env.local`.
+- **Dev-server port**: passed to `pnpm dev`/`next dev` as a real process environment variable (`PORT=<port>`), never via `.env` (Next.js does not read `PORT` from `.env`). `package.json`'s `dev` script is never modified. To run the dev server manually after provisioning:
+  ```bash
+  PORT=$(grep -E '^DEV_PORT=[0-9]+$' .worktree-port | cut -d= -f2) pnpm dev
+  ```
+- **Exit codes 7 and 12 reused, meaning generalized**: `7` now covers any Postgres-port failure (range exhausted, a persisted port held by another process/stack, or the `.env`/`.env.local` `POSTGRES_URL` rewrite could not be verified); `12` covers any dev-server-port failure (range exhausted, or a persisted port held by another process). The error message always names the exact scanned range, or the offending port plus `.worktree-port`.
+- **Main checkout unaffected**: the existing `$WT != $MAIN` guard makes all of the above unreachable for the main checkout, which keeps the literal defaults (`5432`, `3000`) and never creates or reads `.worktree-port`.
+
 ## Triggers vs non-triggers
 
 | Open a worktree | Do not open a worktree |
@@ -64,8 +83,10 @@ Every worktree needs its own `.codegraph/` index — never copy, symlink, or reu
 
 - `Unverified`: how OpenCode sets its working directory when delegating to a worktree was not confirmed during implementation of this change. OpenCode has no native worktree tool and must be pointed at the worktree path manually — do not assume a specific mechanism; verify before relying on it for a given task.
 - `ExitWorktree` does not apply to this manual sibling-worktree mechanism — it only reverses Claude Code's own `EnterWorktree`.
-- On SELinux-enforcing hosts (the norm on Fedora), `worktree-provision.sh` pre-labels the target worktree's bind-mounted `postgres/` data directory `container_file_t` before starting the container stack — the same relabeling a `:Z` mount flag would do. This was discovered during dry-run testing: without it, the postgres image's own permission bootstrap silently fails inside the container and Postgres never becomes ready. `docker-compose.yml` itself is not modified, since it is shared with the main checkout.
+- On SELinux-enforcing hosts (the norm on Fedora), `worktree-provision.sh` pre-labels the target worktree's bind-mounted `postgres/` data directory `container_file_t` before starting the container stack — the same relabeling a `:Z` mount flag would do. This was discovered during dry-run testing: without it, the postgres image's own permission bootstrap silently fails inside the container and Postgres never becomes ready. This SELinux relabeling step does not itself require any `docker-compose.yml` change, and the file is still shared with the main checkout (its only change for port isolation is the `${POSTGRES_HOST_PORT:-5432}` default, which keeps every already-provisioned worktree and the main checkout on today's behavior with no `.env` edit required).
 - A Next.js dev-server run inside a freshly provisioned worktree has been observed to create a stray, harmless, untracked symlink under `.agents/skills/agent-browser/` a few seconds after startup (most likely a file-watcher artifact of `.claude/skills/agent-browser` being a real symlink). It is untracked, confined to that worktree, and does not affect provisioning or migration state — `worktree-cleanup.sh` removes it along with everything else when the worktree is torn down.
+- `git status --porcelain` excludes gitignored files, so `.worktree-port` is invisible to `worktree-cleanup.sh`'s dirty check **only on a branch that carries the `/.worktree-port` line** added to `.gitignore` by worktree-port-isolation. A worktree created from an older branch (one that predates this line) will see `.worktree-port` as untracked, and cleanup will correctly refuse without `--force` — this is expected, not a bug to work around, since `.worktree-port` is deliberately persistent per-worktree state, not a log file that can simply be deleted on success like `.worktree-dev.log`.
+- Two worktrees' `.worktree-port` files can end up with the same `DEV_PORT`: the dev-server port is only reserved for the duration of the provisioning health check (the dev server is killed and its log removed on success), so it is not continuously held the way the Postgres port is via the running container. Assigning both worktrees' Postgres ports never collides, since those containers stay up. This is an accepted, low-risk race window, not a defect — see Design Decision 1 in `openspec/changes/worktree-port-isolation/design.md`.
 
 ## Cleanup checklist
 
