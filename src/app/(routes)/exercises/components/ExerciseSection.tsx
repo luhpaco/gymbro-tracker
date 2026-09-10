@@ -13,12 +13,22 @@ interface Props {
 }
 
 export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
-	const { setExercises, filteredExercises } = useExercisesStore();
+	const { setExercises, filteredExercises, selectedMuscleGroup } =
+		useExercisesStore();
 	useEffect(() => {
 		setExercises(exerciseList);
 	}, [exerciseList, setExercises]);
+
+	const createHref =
+		selectedMuscleGroup && selectedMuscleGroup !== "all"
+			? `/exercises/create?muscleGroup=${selectedMuscleGroup}`
+			: "/exercises/create";
+
 	return (
 		<section className='mt-4 flex flex-col gap-6'>
+			<Button asChild>
+				<Link href={createHref}>Crear ejercicio</Link>
+			</Button>
 			<FilterExercises mouscleGroups={muscleList} />
 			<div className='flex flex-col gap-4'>
 				{filteredExercises.length > 0 ? (
@@ -51,10 +61,7 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 						<p>No has creado ningún ejercicio para este grupo muscular...</p>
 						<p>
 							¡Anímate{" "}
-							<Link
-								href='/exercises/create'
-								className='underline font-semibold'
-							>
+							<Link href={createHref} className='underline font-semibold'>
 								a crear uno!
 							</Link>
 						</p>

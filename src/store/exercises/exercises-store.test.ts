@@ -16,7 +16,11 @@ function makeExercise(overrides: Partial<Exercise> = {}): Exercise {
 
 describe("useExercisesStore", () => {
 	beforeEach(() => {
-		useExercisesStore.setState({ exercises: [], filteredExercises: [] });
+		useExercisesStore.setState({
+			exercises: [],
+			filteredExercises: [],
+			selectedMuscleGroup: "",
+		});
 	});
 
 	it("sets exercises and mirrors them into filteredExercises", () => {
@@ -56,5 +60,33 @@ describe("useExercisesStore", () => {
 		useExercisesStore.getState().filterExercises("all");
 
 		expect(useExercisesStore.getState().filteredExercises).toEqual(exercises);
+	});
+
+	it("sets selectedMuscleGroup to 'all' and keeps the full list", () => {
+		const exercises = [
+			makeExercise({ id: "1", muscleGroupTag: "chest" }),
+			makeExercise({ id: "2", muscleGroupTag: "back" }),
+		];
+		useExercisesStore.getState().setExercises(exercises);
+
+		useExercisesStore.getState().filterExercises("all");
+
+		expect(useExercisesStore.getState().selectedMuscleGroup).toBe("all");
+		expect(useExercisesStore.getState().filteredExercises).toEqual(exercises);
+	});
+
+	it("sets selectedMuscleGroup to the muscle and filters the list", () => {
+		const exercises = [
+			makeExercise({ id: "1", muscleGroupTag: "chest" }),
+			makeExercise({ id: "2", muscleGroupTag: "back" }),
+		];
+		useExercisesStore.getState().setExercises(exercises);
+
+		useExercisesStore.getState().filterExercises("chest");
+
+		expect(useExercisesStore.getState().selectedMuscleGroup).toBe("chest");
+		expect(useExercisesStore.getState().filteredExercises).toEqual([
+			exercises[0],
+		]);
 	});
 });

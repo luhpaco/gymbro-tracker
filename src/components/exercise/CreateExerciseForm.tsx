@@ -27,6 +27,7 @@ import { useToast } from "../ui/use-toast";
 
 interface Props {
 	listMuscleGroups: MuscleGroup[];
+	defaultMuscleGroup?: string;
 }
 
 const CreateExerciseSchema = z.object({
@@ -43,7 +44,10 @@ const CreateExerciseSchema = z.object({
 
 export type CreateExerciseFormData = z.infer<typeof CreateExerciseSchema>;
 
-export const CreateExerciseForm = ({ listMuscleGroups }: Props) => {
+export const CreateExerciseForm = ({
+	listMuscleGroups,
+	defaultMuscleGroup,
+}: Props) => {
 	const router = useRouter();
 	const { toast } = useToast();
 	const form = useForm<CreateExerciseFormData>({
@@ -51,7 +55,7 @@ export const CreateExerciseForm = ({ listMuscleGroups }: Props) => {
 		defaultValues: {
 			exerciseName: "",
 			description: "",
-			muscleGroup: "",
+			muscleGroup: defaultMuscleGroup ?? "",
 		},
 	});
 
