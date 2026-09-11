@@ -33,26 +33,26 @@ export const createExercise = async (
 		return { ok: false, code: "invalid_input" };
 	}
 
-	const { name, description, muscleGroupTag } = parsed.data;
-	const userId = session.user.id;
-
-	const muscleGroup = await prisma.muscleGroup.findUnique({
-		where: { tag: muscleGroupTag },
-	});
-	if (!muscleGroup) {
-		return { ok: false, code: "unknown_muscle_group" };
-	}
-
-	const tag = name.toLowerCase().replace(/\s/g, "-");
-
-	const existingExercise = await prisma.exercise.findFirst({
-		where: { userId, tag },
-	});
-	if (existingExercise) {
-		return { ok: false, code: "duplicate_tag" };
-	}
-
 	try {
+		const { name, description, muscleGroupTag } = parsed.data;
+		const userId = session.user.id;
+
+		const muscleGroup = await prisma.muscleGroup.findUnique({
+			where: { tag: muscleGroupTag },
+		});
+		if (!muscleGroup) {
+			return { ok: false, code: "unknown_muscle_group" };
+		}
+
+		const tag = name.toLowerCase().replace(/\s/g, "-");
+
+		const existingExercise = await prisma.exercise.findFirst({
+			where: { userId, tag },
+		});
+		if (existingExercise) {
+			return { ok: false, code: "duplicate_tag" };
+		}
+
 		const exercise = await prisma.exercise.create({
 			data: {
 				userId,
