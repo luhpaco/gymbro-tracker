@@ -60,8 +60,13 @@ export const CreateExerciseForm = ({
 	});
 
 	const onSubmit = async (data: CreateExerciseFormData) => {
-		try {
-			await createExercise(data);
+		const result = await createExercise({
+			name: data.exerciseName,
+			description: data.description,
+			muscleGroupTag: data.muscleGroup,
+		});
+
+		if (result.ok) {
 			toast({
 				title: "Éxito!!!",
 				description: `El ejercicio ${data.exerciseName} ha sido creado satisfactoriamente.`,
@@ -69,13 +74,21 @@ export const CreateExerciseForm = ({
 			});
 			form.reset();
 			router.push("/exercises");
-		} catch (error) {
+		} else {
+			const messages: Record<typeof result.code, string> = {
+				unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
+				invalid_input: "Revisa los datos del formulario e inténtalo de nuevo.",
+				unknown_muscle_group: "El grupo muscular seleccionado no es válido.",
+				duplicate_tag:
+					"Ya tienes un ejercicio con ese nombre. Prueba con otro.",
+				error:
+					"Ups, ocurrió un problema al crear el ejercicio. Inténtalo de nuevo.",
+			};
 			toast({
 				title: "Error",
-				description: `Ups ocurrió un problema, ${error}`,
+				description: messages[result.code],
 				variant: "destructive",
 			});
-			console.error(`Ups ocurrió un problema, ${error}`);
 		}
 	};
 	return (
