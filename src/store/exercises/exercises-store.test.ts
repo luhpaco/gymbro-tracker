@@ -10,6 +10,7 @@ function makeExercise(overrides: Partial<Exercise> = {}): Exercise {
 		description: null,
 		muscleGroupTag: "chest",
 		userId: "user-1",
+		isActive: true,
 		...overrides,
 	};
 }

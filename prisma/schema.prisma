@@ -43,6 +43,7 @@ model Exercise {
   name        String  @unique
   tag         String
   description String?
+  isActive    Boolean @default(true)
 
   muscleGroup    MuscleGroup @relation(fields: [muscleGroupTag], references: [tag])
   muscleGroupTag String
