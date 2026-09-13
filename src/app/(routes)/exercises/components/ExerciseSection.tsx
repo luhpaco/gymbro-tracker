@@ -55,7 +55,7 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 			<Button asChild>
 				<Link href={createHref}>Crear ejercicio</Link>
 			</Button>
-			<FilterExercises mouscleGroups={muscleList} />
+			<FilterExercises muscleGroups={muscleList} />
 			<div className='flex flex-col gap-4'>
 				{filteredExercises.length > 0 ? (
 					filteredExercises.map((exercise, index) => (
