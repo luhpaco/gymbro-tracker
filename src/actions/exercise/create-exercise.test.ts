@@ -120,6 +120,19 @@ describe("createExercise", () => {
 		expect(mocks.revalidatePath).toHaveBeenCalledWith("/exercises");
 	});
 
+	it("returns error without querying Prisma when auth itself throws", async () => {
+		mocks.auth.mockRejectedValueOnce(new Error("headers unavailable"));
+
+		await expect(createExercise(validInput)).resolves.toEqual({
+			code: "error",
+			ok: false,
+		});
+
+		expect(mocks.findUnique).not.toHaveBeenCalled();
+		expect(mocks.findFirst).not.toHaveBeenCalled();
+		expect(mocks.create).not.toHaveBeenCalled();
+	});
+
 	it("returns error when the muscle-group lookup fails", async () => {
 		mocks.findUnique.mockRejectedValueOnce(new Error("database unavailable"));
 

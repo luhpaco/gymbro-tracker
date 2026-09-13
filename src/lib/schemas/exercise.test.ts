@@ -23,6 +23,17 @@ describe("createExerciseSchema", () => {
 		}
 	});
 
+	it("rejects a whitespace-only name with a name error", () => {
+		const result = createExerciseSchema.safeParse({
+			name: "    ",
+			muscleGroupTag: "chest",
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0].path).toContain("name");
+		}
+	});
+
 	it("rejects an empty muscle-group tag with a muscleGroupTag error", () => {
 		const result = createExerciseSchema.safeParse({
 			name: "Press banca",

@@ -23,17 +23,17 @@ type CreateExerciseResult =
 export const createExercise = async (
 	input: CreateExerciseInput,
 ): Promise<CreateExerciseResult> => {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { ok: false, code: "unauthorized" };
-	}
-
-	const parsed = createExerciseSchema.safeParse(input);
-	if (!parsed.success) {
-		return { ok: false, code: "invalid_input" };
-	}
-
 	try {
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { ok: false, code: "unauthorized" };
+		}
+
+		const parsed = createExerciseSchema.safeParse(input);
+		if (!parsed.success) {
+			return { ok: false, code: "invalid_input" };
+		}
+
 		const { name, description, muscleGroupTag } = parsed.data;
 		const userId = session.user.id;
 
