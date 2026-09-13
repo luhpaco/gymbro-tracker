@@ -6,6 +6,9 @@ import { Exercise, MuscleGroup } from "@prisma/client";
 import { useExercisesStore } from "@/store";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
+import { setExerciseActiveState } from "@/actions/exercise/set-exercise-active-state";
 
 interface Props {
 	exerciseList: Exercise[];
@@ -15,9 +18,32 @@ interface Props {
 export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 	const { setExercises, filteredExercises, selectedMuscleGroup } =
 		useExercisesStore();
+	const router = useRouter();
+	const { toast } = useToast();
 	useEffect(() => {
 		setExercises(exerciseList);
 	}, [exerciseList, setExercises]);
+
+	const handleDeactivate = async (id: string) => {
+		const result = await setExerciseActiveState({ id, isActive: false });
+
+		if (result.ok) {
+			router.refresh();
+		} else {
+			const messages: Record<typeof result.code, string> = {
+				unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
+				invalid_input: "Revisa los datos del ejercicio e inténtalo de nuevo.",
+				not_found: "El ejercicio no existe o no te pertenece.",
+				error:
+					"Ups, ocurrió un problema al eliminar el ejercicio. Inténtalo de nuevo.",
+			};
+			toast({
+				title: "Error",
+				description: messages[result.code],
+				variant: "destructive",
+			});
+		}
+	};
 
 	const createHref =
 		selectedMuscleGroup && selectedMuscleGroup !== "all"
@@ -29,7 +55,7 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 			<Button asChild>
 				<Link href={createHref}>Crear ejercicio</Link>
 			</Button>
-			<FilterExercises mouscleGroups={muscleList} />
+			<FilterExercises muscleGroups={muscleList} />
 			<div className='flex flex-col gap-4'>
 				{filteredExercises.length > 0 ? (
 					filteredExercises.map((exercise, index) => (
@@ -46,11 +72,17 @@ export const ExerciseSection = ({ exerciseList, muscleList }: Props) => {
 								}
 							/>
 							<TornStrip.Body>
-								<div className='flex items-center justify-end'>
+								<div className='flex items-center justify-end gap-2'>
 									<Button asChild>
 										<Link href={`/exercises/update/${exercise.id}`}>
 											Editar
 										</Link>
+									</Button>
+									<Button
+										variant='destructive'
+										onClick={() => handleDeactivate(exercise.id)}
+									>
+										Eliminar
 									</Button>
 								</div>
 							</TornStrip.Body>

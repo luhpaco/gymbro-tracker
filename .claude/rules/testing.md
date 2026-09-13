@@ -1,7 +1,7 @@
 # Testing — gymbro-tracker
 
 - **Runner**: Vitest. `pnpm test` runs once, `pnpm test:watch` watches. Config: `vitest.config.ts` (`environment: "node"`, `vite-tsconfig-paths` for the `@/*` alias).
-- **Scope (Stage 1 — current)**: pure-logic units only, co-located as `*.test.ts` next to their source. Covers Zustand stores (`src/store/**/*-store.ts`), Zod schemas (`src/lib/schemas/workout-set.ts`), and shared utilities (`src/lib/utils.ts`). No component/DOM tests yet — no `jsdom`, `@testing-library/react`, or `jest-dom` installed.
+- **Scope (Stage 1 — current)**: pure-logic units plus mock-based server-action tests, co-located as `*.test.ts` next to their source. Covers Zustand stores (`src/store/**/*-store.ts`), Zod schemas (`src/lib/schemas/workout-set.ts`), shared utilities (`src/lib/utils.ts`), and server actions with mocked `@/auth`, `@/lib/prisma`, and `next/cache` (`src/actions/**`). No component/DOM tests yet — no `jsdom`, `@testing-library/react`, or `jest-dom` installed.
 - **Linter**: `pnpm lint` (ESLint `next/core-web-vitals` + `prettier` last in `extends`, via `eslint-config-prettier`, to disable stylistic rules that could conflict with formatting).
 - **Type checker**: `pnpm exec tsc --noEmit`.
 - **Formatter**: Prettier. `pnpm run format` writes, `pnpm run format:check` verifies (both route through `git ls-files -co --exclude-standard -z | xargs -0 prettier ...` to avoid `prettier`'s own glob expansion choking on the gitignored `postgres/` Docker volume directory).
@@ -11,7 +11,7 @@
 
 ## Roadmap (not yet implemented — do not assume these exist)
 
-- **Stage 2**: mock-based server-action tests (`src/actions/**`).
+- **Stage 2**: mock-based server-action tests (`src/actions/**`) — partially implemented: running co-located under the Stage-1 vitest set pending a dedicated harness.
 - **Stage 3**: Postgres-integration tests against a real service container in CI.
 
 Track these in the Notion backlog, not here — this file reflects current state only.

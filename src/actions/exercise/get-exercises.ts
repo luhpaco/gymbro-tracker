@@ -10,6 +10,7 @@ export const getExercises = async () => {
 		const createdExercises = await prisma.exercise.findMany({
 			where: {
 				userId: session.user.id,
+				isActive: true,
 			},
 		});
 

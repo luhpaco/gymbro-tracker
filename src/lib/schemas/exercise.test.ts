@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createExerciseSchema } from "./exercise";
+import { createExerciseSchema, exerciseActiveStateSchema } from "./exercise";
 
 describe("createExerciseSchema", () => {
 	it("accepts valid input", () => {
@@ -50,5 +50,49 @@ describe("createExerciseSchema", () => {
 			description: "x",
 		});
 		expect(result.success).toBe(false);
+	});
+});
+
+describe("exerciseActiveStateSchema", () => {
+	it("accepts deactivation input", () => {
+		const result = exerciseActiveStateSchema.safeParse({
+			id: "1",
+			isActive: false,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts reactivation input", () => {
+		const result = exerciseActiveStateSchema.safeParse({
+			id: "1",
+			isActive: true,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects an empty id", () => {
+		const result = exerciseActiveStateSchema.safeParse({
+			id: "",
+			isActive: false,
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a non-boolean isActive", () => {
+		const result = exerciseActiveStateSchema.safeParse({
+			id: "1",
+			isActive: "false",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects input missing required fields", () => {
+		const missingActive = exerciseActiveStateSchema.safeParse({ id: "1" });
+		expect(missingActive.success).toBe(false);
+
+		const missingId = exerciseActiveStateSchema.safeParse({
+			isActive: true,
+		});
+		expect(missingId.success).toBe(false);
 	});
 });

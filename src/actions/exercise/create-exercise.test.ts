@@ -163,4 +163,32 @@ describe("createExercise", () => {
 			ok: false,
 		});
 	});
+
+	it("returns duplicate tag when create throws P2002 with composite array target", async () => {
+		const compositeViolation = Object.assign(
+			new Error("Unique constraint failed on the fields: (`userId`,`tag`)"),
+			{ code: "P2002", meta: { target: ["userId", "tag"] } },
+		);
+		mocks.create.mockRejectedValueOnce(compositeViolation);
+
+		await expect(createExercise(validInput)).resolves.toEqual({
+			code: "duplicate_tag",
+			ok: false,
+		});
+	});
+
+	it("returns duplicate tag when create throws P2002 with constraint-name string target", async () => {
+		const compositeViolation = Object.assign(
+			new Error(
+				"Unique constraint failed on the constraint: (`Exercise_userId_tag_key`)",
+			),
+			{ code: "P2002", meta: { target: "Exercise_userId_tag_key" } },
+		);
+		mocks.create.mockRejectedValueOnce(compositeViolation);
+
+		await expect(createExercise(validInput)).resolves.toEqual({
+			code: "duplicate_tag",
+			ok: false,
+		});
+	});
 });

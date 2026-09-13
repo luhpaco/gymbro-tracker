@@ -38,6 +38,7 @@ export const getExercisesSummary = async ({
 			},
 			where: {
 				userId: userId,
+				isActive: true,
 			},
 		});
 		return exercisesSummary;

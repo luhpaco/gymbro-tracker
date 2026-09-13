@@ -43,6 +43,7 @@ model Exercise {
   name        String  @unique
   tag         String
   description String?
+  isActive    Boolean @default(true)
 
   muscleGroup    MuscleGroup @relation(fields: [muscleGroupTag], references: [tag])
   muscleGroupTag String
@@ -50,6 +51,8 @@ model Exercise {
 
   user   User   @relation(fields: [userId], references: [id])
   userId String
+
+  @@unique([userId, tag])
 }
 
 model Workout {

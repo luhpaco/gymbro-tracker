@@ -28,10 +28,10 @@ const FormSchema = z.object({
 });
 
 interface Props {
-	mouscleGroups: MuscleGroup[];
+	muscleGroups: MuscleGroup[];
 }
 
-export const FilterExercises = ({ mouscleGroups }: Props) => {
+export const FilterExercises = ({ muscleGroups }: Props) => {
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 	});
@@ -57,7 +57,7 @@ export const FilterExercises = ({ mouscleGroups }: Props) => {
 								</FormControl>
 								<SelectContent>
 									<SelectItem value='all'>Todos</SelectItem>
-									{mouscleGroups.map((muscle) => (
+									{muscleGroups.map((muscle) => (
 										<SelectItem key={muscle.id} value={muscle.tag}>
 											{muscle.name}
 										</SelectItem>
