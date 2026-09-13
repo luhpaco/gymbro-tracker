@@ -88,3 +88,42 @@ The original tasks remain complete. The authorized remediation is complete and r
 
 - No schema, form, OpenSpec configuration, archive artifact, or Notion content was changed.
 - The current Node 22.22.2 runtime does not satisfy the package's Node 24.x engine declaration; the recorded commands still completed as shown.
+
+## Focused Test-Evidence Remediation — 2026-09-13
+
+### Status
+
+The original tasks remain complete. This authorized remediation adds missing runtime action evidence only and requires independent `sdd-verify` before archive consideration.
+
+### Remediation Outcome
+
+Extended `src/actions/exercise/create-exercise.test.ts` without changing `createExercise` behavior. The suite now proves the unauthorized, invalid-input, unknown-muscle-group, duplicate-tag, happy-path, and explicit global-unique-rejection branches. The three existing Prisma-rejection tests remain, with the create-rejection fixture now representing Prisma P2002.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| Focused test-evidence remediation | `src/actions/exercise/create-exercise.test.ts` | Unit (mocked action runtime) | `CI=true pnpm test src/actions/exercise/create-exercise.test.ts` → 1 file, 3/3 passed | Assertions were added before any fixture adjustment; no RED was applicable because the existing action already satisfied each authorized branch | `CI=true pnpm test src/actions/exercise/create-exercise.test.ts` → 1 file, 8/8 passed | Five added domain outcomes plus explicit P2002 creation rejection cover distinct action paths | Added `vi.clearAllMocks()` to isolate interaction assertions; no production code changed |
+
+### Work Unit Evidence
+
+| Evidence | Value |
+|----------|-------|
+| Focused test command and exact result | `CI=true pnpm test src/actions/exercise/create-exercise.test.ts` → exit 0; 1 file, 8/8 passed |
+| Runtime harness command/scenario and exact result | Vitest invokes `createExercise` with mocked auth, Prisma, and cache dependencies. It proved the six authorized branch outcomes and cache invalidation; exit 0, 8/8 passed. |
+| Rollback boundary | Revert `src/actions/exercise/create-exercise.test.ts` and this remediation section in `openspec/changes/exercise-create-zod-validation/apply-progress.md`; no product behavior, schema, form, archive, or database artifact changes. |
+
+### Remediation Gate Results
+
+| Gate | Command | Result |
+|------|---------|--------|
+| Focused action test | `CI=true pnpm test src/actions/exercise/create-exercise.test.ts` | passed (8/8, 1 file) |
+| Test | `CI=true pnpm test` | passed (66/66, 10 files) |
+| Type check | `CI=true pnpm exec tsc --noEmit` | passed (exit 0, no diagnostics) |
+| Lint | `CI=true pnpm lint` | passed (exit 0, no ESLint warnings or errors) |
+| Format | `CI=true pnpm run format:check` | passed (exit 0, all matched files formatted) |
+
+### Remediation Notes
+
+- No product logic changed; only the test fixture reset and branch assertions were added.
+- The runtime remains Node 22.22.2 while `package.json` declares Node 24.x; all requested commands completed successfully.
