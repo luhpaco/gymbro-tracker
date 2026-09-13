@@ -64,3 +64,22 @@ testing:
       available: true
       tool: "Prettier"
       command: "pnpm run format:check"
+  verified: "2026-09-09"
+  projects:
+    - path: "."
+      stack: "Next.js 15 (App Router, RSC), React 19, TypeScript 5 (strict), Prisma 5.18, PostgreSQL 15, Next-Auth 5, Tailwind/shadcn, Zustand, Zod"
+      test_command: "pnpm test"
+      framework: "vitest"
+      layers:
+        unit: true
+        integration: false
+        e2e: false
+      coverage:
+        available: false
+        command: ""
+      quality:
+        linter: "pnpm lint"
+        type_checker: "pnpm exec tsc --noEmit"
+        formatter: "pnpm run format:check"
+        build: "pnpm build"
+        schema: "pnpm exec prisma validate"
