@@ -20,6 +20,30 @@ type ErrorCode =
 type CreateExerciseResult =
 	{ ok: true; exercise: Exercise } | { ok: false; code: ErrorCode };
 
+const COMPOSITE_TAG_INDEX = "Exercise_userId_tag_key";
+
+const isCompositeTagViolation = (err: unknown): boolean => {
+	if (typeof err !== "object" || err === null) {
+		return false;
+	}
+	if (!("code" in err) || err.code !== "P2002") {
+		return false;
+	}
+	const target =
+		"meta" in err &&
+		typeof err.meta === "object" &&
+		err.meta !== null &&
+		"target" in err.meta
+			? err.meta.target
+			: undefined;
+	if (Array.isArray(target)) {
+		return (
+			target.length === 2 && target.includes("userId") && target.includes("tag")
+		);
+	}
+	return target === COMPOSITE_TAG_INDEX;
+};
+
 export const createExercise = async (
 	input: CreateExerciseInput,
 ): Promise<CreateExerciseResult> => {
@@ -64,7 +88,10 @@ export const createExercise = async (
 		});
 		revalidatePath("/exercises");
 		return { ok: true, exercise };
-	} catch {
+	} catch (err) {
+		if (isCompositeTagViolation(err)) {
+			return { ok: false, code: "duplicate_tag" };
+		}
 		return { ok: false, code: "error" };
 	}
 };
