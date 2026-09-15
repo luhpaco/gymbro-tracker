@@ -79,7 +79,7 @@ export const CreateExerciseForm = ({
 				unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
 				invalid_input: "Revisa los datos del formulario e inténtalo de nuevo.",
 				unknown_muscle_group: "El grupo muscular seleccionado no es válido.",
-				duplicate_tag:
+				duplicate_name:
 					"Ya tienes un ejercicio con ese nombre. Prueba con otro.",
 				error:
 					"Ups, ocurrió un problema al crear el ejercicio. Inténtalo de nuevo.",

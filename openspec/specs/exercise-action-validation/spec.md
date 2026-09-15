@@ -68,103 +68,117 @@ When input parses, the action MUST verify `muscleGroupTag` exists in the `Muscle
 
 ### Requirement: Per-user tag uniqueness pre-check
 
-The action MUST derive `tag` server-side (`name.toLowerCase().replace(/\s/g, "-")`), never from input. The `findFirst` pre-check MUST remain the fast path: when an existing exercise holds the derived `tag` for the same `userId`, the action MUST return `{ ok: false, code: "duplicate_tag" }` before attempting `create`. Per-user uniqueness MUST also hold atomically under concurrency, backed by the composite `(userId, tag)` constraint owned by the `exercise-tag-uniqueness` capability: a `create` that slips past the pre-check and violates that constraint MUST be caught as Prisma P2002 and returned as `{ ok: false, code: "duplicate_tag" }` — no exception MAY escape the union. Cross-user collisions are NOT checked by the pre-check; the global `name @unique` surfaces them as Prisma P2002, and a P2002 on any target other than the composite constraint MUST map to `{ ok: false, code: "error" }`.
-
-(Previously: uniqueness relied solely on the non-atomic `findFirst` pre-check; every caught exception, including any P2002, mapped to `error`.)
+`createExercise` MUST derive canonical identity using the shared normalization rule and MUST pre-check only the authenticated owner's exercises, including inactive rows. A collision MUST return `duplicate_name`; cross-owner reuse MUST proceed. Database conflicts MUST be handled identically.
+(Previously: The action derived a whitespace-to-hyphen tag, returned `duplicate_tag`, and global name collisions became `error`.)
 
 #### Scenario: No collision creates
 
-- GIVEN no existing exercise with the derived `tag` for this user
+- GIVEN no owned exercise has the canonical identity
 - WHEN the pre-check runs
-- THEN the action creates the exercise
+- THEN creation proceeds
 
-#### Scenario: Collision short-circuits
+#### Scenario: Owned collision short-circuits
 
-- GIVEN an existing exercise with the derived `tag` for this user
+- GIVEN an owned exercise, active or inactive, has the identity
 - WHEN the pre-check runs
-- THEN the action returns `{ ok: false, code: "duplicate_tag" }` and no create occurs
+- THEN it returns `duplicate_name` without creating
 
-#### Scenario: Concurrent insert races past the pre-check
+#### Scenario: Concurrent insert races past pre-check
 
-- GIVEN two concurrent requests with the same `userId` and derived `tag`, both past the pre-check
-- WHEN the second `create` violates the composite `(userId, tag)` constraint
-- THEN the action returns `{ ok: false, code: "duplicate_tag" }` and no exception escapes the union
+- GIVEN same-owner requests pass the pre-check
+- WHEN one violates the atomic identity constraint
+- THEN it returns `duplicate_name` without escaping
 
-#### Scenario: Composite P2002 target maps to duplicate_tag
+#### Scenario: Canonical P2002 maps to duplicate_name
 
-- GIVEN `create` throws Prisma P2002 whose `meta.target` is `["userId","tag"]` or `"Exercise_userId_tag_key"`
-- WHEN the catch-all handles the error
-- THEN the action returns `{ ok: false, code: "duplicate_tag" }`
+- GIVEN create receives P2002 for the canonical identity constraint
+- WHEN the error is handled
+- THEN it returns `duplicate_name`
 
-#### Scenario: Cross-user name collision maps to error
+#### Scenario: Cross-owner name reuse proceeds
 
-- GIVEN another user's exercise already holds the same `name`
-- WHEN the action attempts `create`
-- THEN Prisma P2002 is caught and returned as `{ ok: false, code: "error" }`
+- GIVEN another owner holds the canonical identity
+- WHEN create runs
+- THEN creation succeeds if all other checks pass
 
-#### Scenario: Non-composite P2002 target maps to error
+#### Scenario: Other P2002 maps to error
 
-- GIVEN `create` throws Prisma P2002 with any target other than the composite (e.g. `["name"]`)
-- WHEN the catch-all handles the error
-- THEN the action returns `{ ok: false, code: "error" }`
+- GIVEN create receives P2002 for another target
+- WHEN the error is handled
+- THEN it returns `error`
+
 ### Requirement: Discriminated-union return
 
-`createExercise` MUST return exactly one of: `{ ok: true, exercise: Exercise }` on success; `{ ok: false, code }` where `code` is `unauthorized` (missing session), `invalid_input` (parse failure), `unknown_muscle_group`, `duplicate_tag`, or `error` (catch-all covering Prisma P2002 and any other DB error). The action MUST NOT return `undefined` or swallow errors.
+`createExercise` MUST return success with an exercise or failure with `unauthorized`, `invalid_input`, `unknown_muscle_group`, `duplicate_name`, or `error`. It MUST NOT return `undefined` or swallow errors.
+(Previously: The duplicate failure code was `duplicate_tag`.)
 
 #### Scenario: Success
-
-- GIVEN valid input with all pre-checks passing
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: true, exercise }` with the created row
+- GIVEN valid non-conflicting input
+- WHEN creation runs
+- THEN it returns `{ ok: true, exercise }`
 
 #### Scenario: Unauthorized
-
 - GIVEN no session
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: false, code: "unauthorized" }`
+- WHEN creation runs
+- THEN it returns `unauthorized`
 
 #### Scenario: Invalid input
-
 - GIVEN malformed input
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: false, code: "invalid_input" }`
+- WHEN creation runs
+- THEN it returns `invalid_input`
 
 #### Scenario: Unknown muscle group
+- GIVEN an unknown muscle group
+- WHEN creation runs
+- THEN it returns `unknown_muscle_group`
 
-- GIVEN parsed input with an unknown muscle-group tag
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: false, code: "unknown_muscle_group" }`
-
-#### Scenario: Duplicate tag
-
-- GIVEN a per-user tag collision
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: false, code: "duplicate_tag" }`
+#### Scenario: Duplicate name
+- GIVEN an owned normalized-name collision
+- WHEN creation runs
+- THEN it returns `duplicate_name`
 
 #### Scenario: Error catch-all
-
-- GIVEN a Prisma P2002 or other DB error during create
-- WHEN `createExercise` runs
-- THEN it returns `{ ok: false, code: "error" }`
+- GIVEN another database error
+- WHEN creation runs
+- THEN it returns `error`
 
 ### Requirement: Form handles the discriminated union
 
-`CreateExerciseForm` MUST handle both union branches explicitly. On `ok: true` it MUST show the success toast, call `form.reset()`, and `router.push("/exercises")` (current behavior, preserved). On `ok: false` it MUST show a destructive toast whose message is selected by `code` (Spanish messages, per the project's existing form toasts); the success toast MUST NOT appear on any failure code. On submit it MUST map UI field `exerciseName` → `name` and `muscleGroup` → `muscleGroupTag`.
+Create and update forms MUST show success behavior only for successful actions. Every failure MUST show code-specific destructive feedback, keep the form editable, and describe normalized-name conflicts as duplicate names.
+(Previously: Only the create form handled five creation codes, including `duplicate_tag`.)
 
 #### Scenario: Success branch
-
-- GIVEN the action returns `{ ok: true, exercise }`
-- WHEN the form handles the result
-- THEN it shows the success toast, resets, and redirects to `/exercises`
+- GIVEN an action succeeds
+- WHEN its form handles the result
+- THEN it performs that form's existing success flow
 
 #### Scenario: Error branch per code
+- GIVEN an action returns any failure code
+- WHEN its form handles the result
+- THEN it shows destructive code-specific feedback and remains editable
 
-- GIVEN the action returns `{ ok: false, code }` for any of the five codes
-- WHEN the form handles the result
-- THEN it shows a destructive toast with the code-specific message, no success toast, and the form remains editable
+#### Scenario: Field mapping on create
+- GIVEN the create form fields
+- WHEN submitted
+- THEN the action receives `name` and `muscleGroupTag`
 
-#### Scenario: Field mapping on submit
+#### Scenario: Rename duplicate feedback
+- GIVEN rename returns `duplicate_name`
+- WHEN the update form handles it
+- THEN it identifies the name conflict without reporting success
+### Requirement: Validated and authorized rename
 
-- GIVEN the form fields `exerciseName` and `muscleGroup`
-- WHEN the user submits
-- THEN the action receives `{ name, muscleGroupTag }` keys
+`updateExercise` MUST validate session, input, ownership, and name conflict before writing. It MUST return success with the updated exercise or failure code `unauthorized`, `invalid_input`, `not_found`, `duplicate_name`, or `error`; failure MUST NOT write. Success MUST persist display name and canonical identity together.
+
+#### Scenario: Valid owner rename succeeds
+
+- GIVEN an authenticated owner supplies valid, non-conflicting rename input
+- WHEN the rename action runs
+- THEN it returns the updated exercise with name and identity persisted together
+
+#### Scenario: Invalid or unauthorized rename does not write
+
+- GIVEN the session, input, or ownership check fails
+- WHEN the rename action runs
+- THEN it returns the corresponding failure and performs no write
+

@@ -1,10 +1,6 @@
-# Exercise Tag Uniqueness Specification
+# Delta for Exercise Tag Uniqueness
 
-## Purpose
-
-Atomic per-user exercise tag uniqueness: a database-level composite unique constraint on `Exercise (userId, tag)` backs the action-level pre-check, closing the check-to-create race window, with caught Prisma P2002 errors mapped by target.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Composite per-user tag uniqueness constraint
 

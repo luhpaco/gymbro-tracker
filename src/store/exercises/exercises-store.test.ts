@@ -4,6 +4,7 @@ import { useExercisesStore } from "./exercises-store";
 
 function makeExercise(overrides: Partial<Exercise> = {}): Exercise {
 	return {
+		canonicalName: "bench press",
 		id: "exercise-1",
 		name: "Bench Press",
 		tag: "bench-press",
