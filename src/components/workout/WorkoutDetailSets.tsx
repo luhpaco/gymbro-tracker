@@ -5,7 +5,7 @@ import { DataItem } from "@/interfaces";
 
 import { EditableStat } from "../ui/editable-stat";
 import { Stat } from "../ui/stat";
-import { setSchema } from "./AddExerciseForm";
+import { setSchema } from "@/lib/schemas/workout-set";
 
 const validateWeight = (n: number): string | null => {
 	const result = setSchema.shape.weight.safeParse(n);

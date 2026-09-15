@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Exercise } from "../workout/workout-store";
+import { Exercise } from "@/lib/schemas/workout";
 
 interface Workout {
 	name: string;

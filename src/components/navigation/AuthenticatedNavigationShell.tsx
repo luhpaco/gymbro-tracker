@@ -11,7 +11,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useWorkoutStore } from "@/store";
+import { useWorkoutDraftSignalStore } from "@/store";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useState } from "react";
@@ -121,7 +121,9 @@ export function AuthenticatedNavigationShell({
 	children: ReactNode;
 }) {
 	const pathname = usePathname();
-	const exerciseCount = useWorkoutStore((state) => state.exercises.length);
+	const exerciseCount = useWorkoutDraftSignalStore(
+		(state) => state.exerciseCount,
+	);
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const dockSuppressed = shouldSuppressMobileDock(pathname, exerciseCount);
 
