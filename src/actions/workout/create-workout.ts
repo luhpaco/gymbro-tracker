@@ -1,16 +1,32 @@
 "use server";
 
 import { auth } from "@/auth";
-import { CreateWorkoutFormData } from "@/lib/schemas/workout";
+import {
+	AddWorkoutFormSchema,
+	CreateWorkoutFormData,
+} from "@/lib/schemas/workout";
 import prisma from "@/lib/prisma";
+import { Workout } from "@prisma/client";
 
-export const createWorkout = async (formData: CreateWorkoutFormData) => {
+type CreateWorkoutResult =
+	| { ok: true; workout: Workout }
+	| { ok: false; code: "unauthorized" | "invalid_input" | "error" };
+
+export const createWorkout = async (
+	formData: CreateWorkoutFormData,
+): Promise<CreateWorkoutResult> => {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { ok: false, code: "unauthorized" };
+	}
+
+	const parsed = AddWorkoutFormSchema.safeParse(formData);
+	if (!parsed.success) {
+		return { ok: false, code: "invalid_input" };
+	}
+
 	try {
-		const session = await auth();
-		if (!session) {
-			throw new Error("You must be authenticated to create a workout");
-		}
-		const { listExercises } = formData;
+		const { listExercises, nameWorkout, dateWorkout } = parsed.data;
 		const setsForRecording = listExercises.map((exercise) => {
 			return exercise.sets.map((set) => ({
 				reps: set.reps,
@@ -18,21 +34,23 @@ export const createWorkout = async (formData: CreateWorkoutFormData) => {
 				exerciseId: exercise.exerciseValue,
 			}));
 		});
-		const newWorkout = await prisma.workout.create({
+		const workout = await prisma.workout.create({
 			data: {
 				userId: session.user.id,
-				name: formData.nameWorkout,
-				date: formData.dateWorkout,
+				name: nameWorkout,
+				date: dateWorkout,
 				tag:
-					formData.nameWorkout.toLowerCase().replace(/\s/g, "-") +
+					nameWorkout.toLowerCase().replace(/\s/g, "-") +
 					"-workout-" +
-					formData.dateWorkout.toISOString(),
+					dateWorkout.toISOString(),
 				sets: {
 					create: setsForRecording.flat(),
 				},
 			},
 		});
+		return { ok: true, workout };
 	} catch (error) {
 		console.error(error);
+		return { ok: false, code: "error" };
 	}
 };

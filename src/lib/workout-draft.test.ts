@@ -89,4 +89,21 @@ describe("workout-draft", () => {
 
 		expect(loadDraft()).toBeNull();
 	});
+
+	it("returns null and does not throw when localStorage.getItem itself throws", () => {
+		mockStorage.getItem.mockImplementation(() => {
+			throw new Error("SecurityError: storage disabled");
+		});
+
+		expect(() => loadDraft()).not.toThrow();
+		expect(loadDraft()).toBeNull();
+	});
+
+	it("does not throw when localStorage.removeItem itself throws", () => {
+		mockStorage.removeItem.mockImplementation(() => {
+			throw new Error("SecurityError: storage disabled");
+		});
+
+		expect(() => clearDraft()).not.toThrow();
+	});
 });
