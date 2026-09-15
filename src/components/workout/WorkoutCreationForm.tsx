@@ -84,6 +84,7 @@ const ExerciseRow = ({
 		control,
 		name: `listExercises.${index}.exerciseName`,
 	});
+	const [isPickerOpen, setIsPickerOpen] = useState(false);
 
 	const {
 		fields: setFields,
@@ -96,135 +97,144 @@ const ExerciseRow = ({
 	});
 
 	return (
-		<TornStrip className='flex flex-col gap-4'>
-			<div className='flex items-center justify-between'>
-				<FormField
-					control={control}
-					name={`listExercises.${index}.exerciseValue`}
-					render={() => (
-						<FormItem className='flex flex-1 flex-col'>
-							<FormLabel>Selecciona tu ejercicio:</FormLabel>
-							<Popover>
-								<PopoverTrigger asChild>
-									<FormControl>
-										<Button
-											variant='outline'
-											type='button'
-											role='combobox'
-											className={cn(
-												"w-full justify-between",
-												!exerciseValue && "text-muted-foreground",
-											)}
-										>
-											{exerciseName || "Selecciona un ejercicio"}
-											<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 text-muted-foreground' />
-										</Button>
-									</FormControl>
-								</PopoverTrigger>
-								<PopoverContent className='w-full p-0'>
-									<Command>
-										<CommandInput placeholder='Selecciona un ejercicio...' />
-										<CommandEmpty>No se encontró tu ejercicio.</CommandEmpty>
-										<CommandGroup>
-											<CommandList>
-												{exercisesCreated.map((exercise) => (
-													<CommandItem
-														key={exercise.id}
-														value={exercise.name}
-														onSelect={() => {
-															setValue(
-																`listExercises.${index}.exerciseValue`,
-																exercise.id,
-															);
-															setValue(
-																`listExercises.${index}.exerciseName`,
-																exercise.name,
-															);
-														}}
-													>
-														<Check
-															className={cn(
-																"mr-2 h-4 w-4",
-																exercise.id === exerciseValue
-																	? "opacity-100"
-																	: "opacity-0",
-															)}
-														/>
-														{exercise.name}
-													</CommandItem>
-												))}
-											</CommandList>
-										</CommandGroup>
-									</Command>
-								</PopoverContent>
-							</Popover>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<button
-					type='button'
-					className='p-1 text-destructive rounded-md'
-					aria-label={`Eliminar ${exerciseName || "ejercicio"}`}
-					onClick={onRemove}
-				>
-					<Trash2 size={18} />
-				</button>
-			</div>
+		<TornStrip>
+			<div className='flex flex-col gap-4'>
+				<div className='flex items-center gap-2'>
+					<FormField
+						control={control}
+						name={`listExercises.${index}.exerciseValue`}
+						render={() => (
+							<FormItem className='flex min-w-0 flex-1 flex-col'>
+								<FormLabel>Selecciona tu ejercicio:</FormLabel>
+								<Popover open={isPickerOpen} onOpenChange={setIsPickerOpen}>
+									<PopoverTrigger asChild>
+										<FormControl>
+											<Button
+												variant='outline'
+												type='button'
+												role='combobox'
+												className={cn(
+													"w-full min-w-0 justify-between",
+													!exerciseValue && "text-muted-foreground",
+												)}
+											>
+												<span className='truncate'>
+													{exerciseName || "Selecciona un ejercicio"}
+												</span>
+												<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 text-muted-foreground' />
+											</Button>
+										</FormControl>
+									</PopoverTrigger>
+									<PopoverContent className='w-full p-0'>
+										<Command>
+											<CommandInput placeholder='Selecciona un ejercicio...' />
+											<CommandEmpty>No se encontró tu ejercicio.</CommandEmpty>
+											<CommandGroup>
+												<CommandList>
+													{exercisesCreated.map((exercise) => (
+														<CommandItem
+															key={exercise.id}
+															value={exercise.name}
+															onSelect={() => {
+																setValue(
+																	`listExercises.${index}.exerciseValue`,
+																	exercise.id,
+																);
+																setValue(
+																	`listExercises.${index}.exerciseName`,
+																	exercise.name,
+																);
+																setIsPickerOpen(false);
+															}}
+														>
+															<Check
+																className={cn(
+																	"mr-2 h-4 w-4 shrink-0",
+																	exercise.id === exerciseValue
+																		? "opacity-100"
+																		: "opacity-0",
+																)}
+															/>
+															<span className='truncate'>{exercise.name}</span>
+														</CommandItem>
+													))}
+												</CommandList>
+											</CommandGroup>
+										</Command>
+									</PopoverContent>
+								</Popover>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<button
+						type='button'
+						className='shrink-0 p-1 text-destructive rounded-md'
+						aria-label={`Eliminar ${exerciseName || "ejercicio"}`}
+						onClick={onRemove}
+					>
+						<Trash2 size={18} />
+					</button>
+				</div>
 
-			<div className='flex gap-4 items-center justify-center'>
-				<Button
-					size='icon'
-					type='button'
-					disabled={setFields.length <= 1}
-					onClick={() => removeSet(setFields.length - 1)}
-				>
-					<Minus />
-				</Button>
-				<Stat value={setFields.length} width='2ch' className='text-2xl' />
-				<Button
-					size='icon'
-					type='button'
-					disabled={setFields.length >= 5}
-					onClick={() => appendSet({ reps: 0, weight: 0 })}
-				>
-					<Plus />
-				</Button>
-			</div>
+				<div className='flex gap-4 items-center justify-center'>
+					<Button
+						size='icon'
+						type='button'
+						disabled={setFields.length <= 1}
+						onClick={() => removeSet(setFields.length - 1)}
+					>
+						<Minus />
+					</Button>
+					<Stat value={setFields.length} width='2ch' className='text-2xl' />
+					<Button
+						size='icon'
+						type='button'
+						disabled={setFields.length >= 5}
+						onClick={() => appendSet({ reps: 0, weight: 0 })}
+					>
+						<Plus />
+					</Button>
+				</div>
 
-			<ol className='flex flex-col gap-2'>
-				{setFields.map((setField, setIndex) => (
-					<li key={setField.id} className='h-14'>
-						<TornStrip flat className='h-full flex items-center'>
-							<div className='flex w-full items-center justify-between'>
-								<div className='flex items-baseline gap-2'>
-									<span className='text-xs text-card-foreground/70'>Peso</span>
-									<EditableStat
-										value={setField.weight}
-										label={`Peso, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
-										unit='kg'
-										onCommit={(next) =>
-											updateSet(setIndex, { ...setField, weight: next })
-										}
-										validate={validateWeight}
-									/>
+				<ol className='flex flex-col gap-2'>
+					{setFields.map((setField, setIndex) => (
+						<li key={setField.id} className='h-14'>
+							<TornStrip flat>
+								<div className='flex h-full items-center justify-between gap-4'>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-xs text-card-foreground/70'>
+											Peso
+										</span>
+										<EditableStat
+											value={setField.weight}
+											label={`Peso, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
+											unit='kg'
+											onCommit={(next) =>
+												updateSet(setIndex, { ...setField, weight: next })
+											}
+											validate={validateWeight}
+										/>
+									</div>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-xs text-card-foreground/70'>
+											Reps
+										</span>
+										<EditableStat
+											value={setField.reps}
+											label={`Repeticiones, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
+											onCommit={(next) =>
+												updateSet(setIndex, { ...setField, reps: next })
+											}
+											validate={validateReps}
+										/>
+									</div>
 								</div>
-								<div className='flex items-baseline gap-2'>
-									<span className='text-xs text-card-foreground/70'>Reps</span>
-									<EditableStat
-										value={setField.reps}
-										label={`Repeticiones, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
-										onCommit={(next) =>
-											updateSet(setIndex, { ...setField, reps: next })
-										}
-										validate={validateReps}
-									/>
-								</div>
-							</div>
-						</TornStrip>
-					</li>
-				))}
-			</ol>
+							</TornStrip>
+						</li>
+					))}
+				</ol>
+			</div>
 		</TornStrip>
 	);
 };
@@ -316,70 +326,75 @@ export const WorkoutCreationForm = ({ exercisesCreated }: Props) => {
 				className='flex flex-col gap-6'
 				onSubmit={form.handleSubmit(onSubmit)}
 			>
-				<TornStrip className='flex flex-col gap-4'>
-					<FormField
-						control={form.control}
-						name='nameWorkout'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Nombre del entrenamiento:</FormLabel>
-								<FormControl>
-									<Input
-										{...field}
-										placeholder='Ejemplo: Día de pierna'
-										type='text'
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name='dateWorkout'
-						render={({ field }) => (
-							<FormItem className='flex flex-col'>
-								<FormLabel>Fecha del entrenamiento:</FormLabel>
-								<Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-									<PopoverTrigger asChild>
-										<FormControl>
-											<Button
-												type='button'
-												variant='outline'
-												className={cn(
-													"w-full pl-3 text-left font-normal",
-													field.value
-														? "text-foreground"
-														: "text-muted-foreground",
-												)}
-											>
-												{field.value ? (
-													format(field.value, "PPPP")
-												) : (
-													<span>Selecciona una fecha</span>
-												)}
-											</Button>
-										</FormControl>
-									</PopoverTrigger>
-									<PopoverContent className='w-full p-0' align='center'>
-										<Calendar
-											mode='single'
-											selected={field.value}
-											onSelect={(e) => {
-												field.onChange(e);
-												setIsCalendarOpen(false);
-											}}
-											disabled={(date) =>
-												date > new Date() || date < new Date("1900-01-01")
-											}
-											autoFocus
+				<TornStrip>
+					<div className='flex flex-col gap-4'>
+						<FormField
+							control={form.control}
+							name='nameWorkout'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Nombre del entrenamiento:</FormLabel>
+									<FormControl>
+										<Input
+											{...field}
+											placeholder='Ejemplo: Día de pierna'
+											type='text'
 										/>
-									</PopoverContent>
-								</Popover>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name='dateWorkout'
+							render={({ field }) => (
+								<FormItem className='flex flex-col'>
+									<FormLabel>Fecha del entrenamiento:</FormLabel>
+									<Popover
+										open={isCalendarOpen}
+										onOpenChange={setIsCalendarOpen}
+									>
+										<PopoverTrigger asChild>
+											<FormControl>
+												<Button
+													type='button'
+													variant='outline'
+													className={cn(
+														"w-full pl-3 text-left font-normal",
+														field.value
+															? "text-foreground"
+															: "text-muted-foreground",
+													)}
+												>
+													{field.value ? (
+														format(field.value, "PPPP")
+													) : (
+														<span>Selecciona una fecha</span>
+													)}
+												</Button>
+											</FormControl>
+										</PopoverTrigger>
+										<PopoverContent className='w-full p-0' align='center'>
+											<Calendar
+												mode='single'
+												selected={field.value}
+												onSelect={(e) => {
+													field.onChange(e);
+													setIsCalendarOpen(false);
+												}}
+												disabled={(date) =>
+													date > new Date() || date < new Date("1900-01-01")
+												}
+												autoFocus
+											/>
+										</PopoverContent>
+									</Popover>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
 				</TornStrip>
 
 				<div className='flex flex-col gap-6'>
