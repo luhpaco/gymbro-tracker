@@ -29,10 +29,10 @@ export function saveDraft(data: WorkoutDraft): void {
 export function loadDraft(): WorkoutDraft | null {
 	if (typeof localStorage === "undefined") return null;
 
-	const raw = localStorage.getItem(DRAFT_KEY);
-	if (!raw) return null;
-
 	try {
+		const raw = localStorage.getItem(DRAFT_KEY);
+		if (!raw) return null;
+
 		const parsed: unknown = JSON.parse(raw);
 		const result = workoutDraftSchema.safeParse(parsed);
 		return result.success ? result.data : null;
@@ -43,5 +43,9 @@ export function loadDraft(): WorkoutDraft | null {
 
 export function clearDraft(): void {
 	if (typeof localStorage === "undefined") return;
-	localStorage.removeItem(DRAFT_KEY);
+	try {
+		localStorage.removeItem(DRAFT_KEY);
+	} catch {
+		// Best-effort cleanup — a storage error here must not break the save flow.
+	}
 }

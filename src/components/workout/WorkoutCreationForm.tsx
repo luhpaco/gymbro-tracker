@@ -300,7 +300,22 @@ export const WorkoutCreationForm = ({ exercisesCreated }: Props) => {
 	const onSubmit = async (data: FormValues) => {
 		try {
 			const tagWorkout = data.nameWorkout.toLowerCase().replace(/\s+/g, "-");
-			await createWorkout({ ...data, tagWorkout });
+			const result = await createWorkout({ ...data, tagWorkout });
+			if (!result.ok) {
+				const messages: Record<typeof result.code, string> = {
+					unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
+					invalid_input:
+						"Revisa los datos de tu entrenamiento e inténtalo de nuevo.",
+					error:
+						"Ups, ocurrió un problema al guardar el entrenamiento. Inténtalo de nuevo.",
+				};
+				toast({
+					title: "Error",
+					description: messages[result.code],
+					variant: "destructive",
+				});
+				return;
+			}
 			clearDraft();
 			form.reset({ nameWorkout: "", tagWorkout: "", listExercises: [] });
 			setExerciseCount(0);
