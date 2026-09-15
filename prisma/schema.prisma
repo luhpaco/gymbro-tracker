@@ -39,9 +39,10 @@ model MuscleGroup {
 }
 
 model Exercise {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  tag         String
+  id            String  @id @default(uuid())
+  name          String
+  tag           String
+  canonicalName String
   description String?
   isActive    Boolean @default(true)
 
@@ -52,7 +53,7 @@ model Exercise {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  @@unique([userId, tag])
+  @@unique([userId, canonicalName])
 }
 
 model Workout {
