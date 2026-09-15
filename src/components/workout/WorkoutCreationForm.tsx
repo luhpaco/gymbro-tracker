@@ -6,6 +6,7 @@ import {
 	useFieldArray,
 	useForm,
 	UseFormSetValue,
+	useWatch,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,8 +62,6 @@ interface ExerciseRowProps {
 	control: Control<FormValues>;
 	setValue: UseFormSetValue<FormValues>;
 	index: number;
-	exerciseValue: string;
-	exerciseName: string;
 	exercisesCreated: ExerciseOption[];
 	onRemove: () => void;
 }
@@ -71,11 +70,21 @@ const ExerciseRow = ({
 	control,
 	setValue,
 	index,
-	exerciseValue,
-	exerciseName,
 	exercisesCreated,
 	onRemove,
 }: ExerciseRowProps) => {
+	// useFieldArray's own `fields` snapshot does not update on setValue() —
+	// only on append/remove/update — so the exercise picker must read the
+	// live value via useWatch to reflect a selection immediately.
+	const exerciseValue = useWatch({
+		control,
+		name: `listExercises.${index}.exerciseValue`,
+	});
+	const exerciseName = useWatch({
+		control,
+		name: `listExercises.${index}.exerciseName`,
+	});
+
 	const {
 		fields: setFields,
 		append: appendSet,
@@ -386,8 +395,6 @@ export const WorkoutCreationForm = ({ exercisesCreated }: Props) => {
 								control={form.control}
 								setValue={form.setValue}
 								index={index}
-								exerciseValue={field.exerciseValue}
-								exerciseName={field.exerciseName}
 								exercisesCreated={exercisesCreated}
 								onRemove={() => remove(index)}
 							/>
