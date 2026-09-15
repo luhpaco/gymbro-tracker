@@ -34,3 +34,4 @@ export const AddWorkoutFormSchema = z.object({
 });
 
 export type CreateWorkoutFormData = z.infer<typeof AddWorkoutFormSchema>;
+export type Exercise = z.infer<typeof AddExerciseFormSchema>;

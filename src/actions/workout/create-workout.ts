@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { CreateWorkoutFormData } from "@/components/workout/SummaryWorkoutForm";
+import { CreateWorkoutFormData } from "@/lib/schemas/workout";
 import prisma from "@/lib/prisma";
 
 export const createWorkout = async (formData: CreateWorkoutFormData) => {

@@ -1,5 +1,5 @@
 import { getExercises } from "@/actions";
-import { DialogAddExercise, SummaryWorkout } from "@/components";
+import { WorkoutCreationForm } from "@/components";
 import { TornStrip } from "@/components/ui/torn-strip";
 
 export default async function CreateWorkoutPage() {
@@ -11,16 +11,13 @@ export default async function CreateWorkoutPage() {
 					<div>
 						<h2>Crear entrenamiento</h2>
 						<p className='text-xs text-muted-foreground mt-2'>
-							Vamos a crear tu entrenamiento, primero agrega cada uno de tus
-							ejercicios con sus series, repeticiones y pesos.
+							Agrega el nombre, la fecha y cada uno de tus ejercicios con sus
+							series, repeticiones y pesos, y guarda todo de una vez.
 						</p>
-					</div>
-					<div className='flex flex-col justify-center items-center'>
-						<DialogAddExercise listExercises={allExercisesCreated} />
 					</div>
 				</TornStrip>
 			</section>
-			<SummaryWorkout />
+			<WorkoutCreationForm exercisesCreated={allExercisesCreated} />
 		</main>
 	);
 }
