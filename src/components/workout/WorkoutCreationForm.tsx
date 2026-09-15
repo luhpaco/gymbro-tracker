@@ -204,6 +204,19 @@ const ExerciseRow = ({
 								<div className='flex h-full items-center justify-between gap-4'>
 									<div className='flex items-baseline gap-2'>
 										<span className='text-xs text-card-foreground/70'>
+											Reps
+										</span>
+										<EditableStat
+											value={setField.reps}
+											label={`Repeticiones, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
+											onCommit={(next) =>
+												updateSet(setIndex, { ...setField, reps: next })
+											}
+											validate={validateReps}
+										/>
+									</div>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-xs text-card-foreground/70'>
 											Peso
 										</span>
 										<EditableStat
@@ -214,19 +227,6 @@ const ExerciseRow = ({
 												updateSet(setIndex, { ...setField, weight: next })
 											}
 											validate={validateWeight}
-										/>
-									</div>
-									<div className='flex items-baseline gap-2'>
-										<span className='text-xs text-card-foreground/70'>
-											Reps
-										</span>
-										<EditableStat
-											value={setField.reps}
-											label={`Repeticiones, serie ${setIndex + 1}, ${exerciseName || "ejercicio"}`}
-											onCommit={(next) =>
-												updateSet(setIndex, { ...setField, reps: next })
-											}
-											validate={validateReps}
 										/>
 									</div>
 								</div>
