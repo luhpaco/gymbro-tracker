@@ -31,10 +31,8 @@ interface Props {
 	exerciseToEdit: {
 		id: string;
 		name: string;
-		tag: string;
 		description: string | null;
 		muscleGroupTag: string;
-		userId: string;
 	};
 }
 
@@ -68,21 +66,36 @@ export const UpdateExerciseForm = ({
 		},
 	});
 	const onSubmit = async (data: UpdateExerciseFormData) => {
-		try {
-			await updateExercise(exerciseToEdit.id, exerciseToEdit.userId, data);
+		const result = await updateExercise({
+			description: data.description,
+			id: exerciseToEdit.id,
+			muscleGroupTag: data.muscleGroup,
+			name: data.exerciseName,
+		});
+
+		if (result.ok) {
 			toast({
 				title: "Ejercicio actualizado",
 				description: "Tu ejercicio ha sido actualizado satisfactoriamente",
 			});
 			form.reset();
 			router.push("/exercises");
-		} catch (error) {
-			toast({
-				title: "Error",
-				description: "Ups ocurrió un problema, intenta de nuevo",
-				variant: "destructive",
-			});
+			return;
 		}
+
+		const messages: Record<typeof result.code, string> = {
+			unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
+			invalid_input: "Revisa los datos del formulario e inténtalo de nuevo.",
+			not_found: "El ejercicio ya no existe o no te pertenece.",
+			unknown_muscle_group: "El grupo muscular seleccionado no es válido.",
+			duplicate_name: "Ya tienes un ejercicio con ese nombre. Prueba con otro.",
+			error: "Ups ocurrió un problema, intenta de nuevo",
+		};
+		toast({
+			title: "Error",
+			description: messages[result.code],
+			variant: "destructive",
+		});
 	};
 	return (
 		<Form {...form}>

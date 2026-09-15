@@ -113,16 +113,23 @@ Each exercise card in `ExerciseSection` MUST expose a destructive deactivate con
 
 ### Requirement: Name Uniqueness Unaffected
 
-Deactivation MUST NOT free the global `name @unique` constraint. Creating an exercise whose name is held by an inactive exercise MUST fail; reactivation is the supported path to restore that exercise.
+Deactivation MUST NOT release an exercise's owner-scoped canonical identity. The owner MUST reactivate or rename the existing row before reusing that identity; another owner MAY use it. Reactivation MUST preserve the existing row and history.
+(Previously: Inactive names remained reserved globally.)
 
-#### Scenario: Same-name creation fails while inactive
+#### Scenario: Same-owner creation fails while inactive
 
-- GIVEN an inactive exercise holds the name "X"
-- WHEN any user attempts to create an exercise named "X"
-- THEN the create is rejected by the existing uniqueness checks
+- GIVEN an inactive exercise holds the owner's canonical identity
+- WHEN that owner creates an equivalent name
+- THEN creation returns duplicate-name feedback
+
+#### Scenario: Another owner may reuse the name
+
+- GIVEN an inactive exercise holds one owner's canonical identity
+- WHEN another owner creates an equivalent name
+- THEN creation succeeds
 
 #### Scenario: Reactivation restores the exercise
 
-- GIVEN the owner's exercise "X" is inactive
-- WHEN the owner reactivates it via `setExerciseActiveState`
-- THEN "X" reappears in active-only lists under the existing row
+- GIVEN the owner's exercise is inactive
+- WHEN the owner reactivates it
+- THEN the existing row reappears with its history preserved

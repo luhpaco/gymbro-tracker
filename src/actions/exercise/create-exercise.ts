@@ -9,40 +9,21 @@ import {
 } from "@/lib/schemas/exercise";
 import prisma from "@/lib/prisma";
 import { Exercise } from "@prisma/client";
+import { deriveExerciseTag, normalizeExerciseName } from "@/lib/exercise-name";
+import {
+	findOwnedExerciseByCanonicalName,
+	isCanonicalUniquenessViolation,
+} from "@/lib/exercises";
 
 type ErrorCode =
 	| "unauthorized"
 	| "invalid_input"
 	| "unknown_muscle_group"
-	| "duplicate_tag"
+	| "duplicate_name"
 	| "error";
 
 type CreateExerciseResult =
 	{ ok: true; exercise: Exercise } | { ok: false; code: ErrorCode };
-
-const COMPOSITE_TAG_INDEX = "Exercise_userId_tag_key";
-
-const isCompositeTagViolation = (err: unknown): boolean => {
-	if (typeof err !== "object" || err === null) {
-		return false;
-	}
-	if (!("code" in err) || err.code !== "P2002") {
-		return false;
-	}
-	const target =
-		"meta" in err &&
-		typeof err.meta === "object" &&
-		err.meta !== null &&
-		"target" in err.meta
-			? err.meta.target
-			: undefined;
-	if (Array.isArray(target)) {
-		return (
-			target.length === 2 && target.includes("userId") && target.includes("tag")
-		);
-	}
-	return target === COMPOSITE_TAG_INDEX;
-};
 
 export const createExercise = async (
 	input: CreateExerciseInput,
@@ -58,8 +39,9 @@ export const createExercise = async (
 			return { ok: false, code: "invalid_input" };
 		}
 
-		const { name, description, muscleGroupTag } = parsed.data;
+		const { description, muscleGroupTag, name: rawName } = parsed.data;
 		const userId = session.user.id;
+		const { canonicalName, name } = normalizeExerciseName(rawName);
 
 		const muscleGroup = await prisma.muscleGroup.findUnique({
 			where: { tag: muscleGroupTag },
@@ -68,29 +50,29 @@ export const createExercise = async (
 			return { ok: false, code: "unknown_muscle_group" };
 		}
 
-		const tag = name.toLowerCase().replace(/\s/g, "-");
-
-		const existingExercise = await prisma.exercise.findFirst({
-			where: { userId, tag },
+		const existingExercise = await findOwnedExerciseByCanonicalName(prisma, {
+			canonicalName,
+			userId,
 		});
 		if (existingExercise) {
-			return { ok: false, code: "duplicate_tag" };
+			return { ok: false, code: "duplicate_name" };
 		}
 
 		const exercise = await prisma.exercise.create({
 			data: {
-				userId,
-				name,
-				tag,
+				canonicalName,
 				description,
 				muscleGroupTag,
+				name,
+				tag: deriveExerciseTag(name),
+				userId,
 			},
 		});
 		revalidatePath("/exercises");
 		return { ok: true, exercise };
 	} catch (err) {
-		if (isCompositeTagViolation(err)) {
-			return { ok: false, code: "duplicate_tag" };
+		if (isCanonicalUniquenessViolation(err)) {
+			return { ok: false, code: "duplicate_name" };
 		}
 		return { ok: false, code: "error" };
 	}

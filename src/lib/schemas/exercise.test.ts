@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { createExerciseSchema, exerciseActiveStateSchema } from "./exercise";
+import {
+	createExerciseSchema,
+	exerciseActiveStateSchema,
+	updateExerciseSchema,
+} from "./exercise";
 
 describe("createExerciseSchema", () => {
 	it("accepts valid input", () => {
@@ -50,6 +54,84 @@ describe("createExerciseSchema", () => {
 			description: "x",
 		});
 		expect(result.success).toBe(false);
+	});
+
+	it("rejects names shorter than 4 characters after display normalization", () => {
+		const result = createExerciseSchema.safeParse({
+			name: "a  b",
+			muscleGroupTag: "chest",
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0].path).toContain("name");
+		}
+	});
+
+	it("rejects caller-supplied userId, tag, and canonicalName", () => {
+		for (const extra of [
+			{ userId: "user-1" },
+			{ tag: "press-banca" },
+			{ canonicalName: "press banca" },
+		]) {
+			const result = createExerciseSchema.safeParse({
+				name: "Press banca",
+				muscleGroupTag: "chest",
+				...extra,
+			});
+			expect(result.success).toBe(false);
+		}
+	});
+});
+
+describe("updateExerciseSchema", () => {
+	it("accepts valid rename input with id", () => {
+		const result = updateExerciseSchema.safeParse({
+			id: "exercise-1",
+			name: "Press banca",
+			muscleGroupTag: "chest",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects missing or empty id", () => {
+		expect(
+			updateExerciseSchema.safeParse({
+				name: "Press banca",
+				muscleGroupTag: "chest",
+			}).success,
+		).toBe(false);
+		expect(
+			updateExerciseSchema.safeParse({
+				id: "",
+				name: "Press banca",
+				muscleGroupTag: "chest",
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects names shorter than 4 characters after display normalization", () => {
+		const result = updateExerciseSchema.safeParse({
+			id: "exercise-1",
+			name: "a  b",
+			muscleGroupTag: "chest",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects caller-supplied userId, tag, and canonicalName", () => {
+		for (const extra of [
+			{ userId: "user-1" },
+			{ tag: "press-banca" },
+			{ canonicalName: "press banca" },
+		]) {
+			const result = updateExerciseSchema.safeParse({
+				id: "exercise-1",
+				name: "Press banca",
+				muscleGroupTag: "chest",
+				...extra,
+			});
+			expect(result.success).toBe(false);
+		}
 	});
 });
 
