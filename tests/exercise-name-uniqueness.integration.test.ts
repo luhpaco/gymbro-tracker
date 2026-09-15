@@ -70,6 +70,11 @@ describe.skipIf(!RUN_INTEGRATION)(
 		});
 
 		it("prohibits null canonical identity", async () => {
+			const columns: Array<{ is_nullable: string }> =
+				await prisma.$queryRawUnsafe(
+					`SELECT is_nullable FROM information_schema.columns WHERE table_name = 'Exercise' AND column_name = 'canonicalName'`,
+				);
+			expect(columns[0]?.is_nullable).toBe("NO");
 			await expect(
 				prisma.exercise.create({
 					data: {
