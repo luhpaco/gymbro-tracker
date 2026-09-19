@@ -118,21 +118,26 @@ export function BreadcrumbsClient({
 	}, [pathname]);
 
 	// Resolved (DB-backed) dynamic label for the current pathname.
-	// `undefined` = still loading → keep showing the fallback.
-	const [resolved, setResolved] = React.useState<BreadcrumbType[] | null>();
+	// null = still loading → keep showing the fallback. The pathname is
+	// stored alongside the trail so the first render after a dynamic→dynamic
+	// navigation (before the effect resolves) falls back instead of showing
+	// the previous route's DB label.
+	const [resolved, setResolved] = React.useState<{
+		pathname: string;
+		trail: BreadcrumbType[];
+	} | null>(null);
 
 	React.useEffect(() => {
 		if (state.kind !== "dynamic" || !pathname) return;
 		let cancelled = false;
-		setResolved(undefined);
 		getBreadcrumbTrail(pathname).then(
 			(trail) => {
 				if (cancelled) return;
-				setResolved(trail ?? state.fallback);
+				setResolved({ pathname, trail: trail ?? state.fallback });
 			},
 			() => {
 				if (cancelled) return;
-				setResolved(state.fallback);
+				setResolved({ pathname, trail: state.fallback });
 			},
 		);
 		return () => {
@@ -142,7 +147,15 @@ export function BreadcrumbsClient({
 
 	if (state.kind === "hidden") return null;
 	if (state.kind === "static") return <TrailView trail={state.trail} />;
-	return <TrailView trail={resolved ?? state.fallback} />;
+	return (
+		<TrailView
+			trail={
+				resolved != null && resolved.pathname === pathname
+					? resolved.trail
+					: state.fallback
+			}
+		/>
+	);
 }
 
 export default BreadcrumbsClient;

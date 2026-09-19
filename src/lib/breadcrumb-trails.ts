@@ -135,36 +135,38 @@ export function buildDecodedFallbackTrail(
 	pathname: string,
 ): Breadcrumb[] | null {
 	const canonical = normalizePathname(pathname);
+	const segments = canonical.split("/").filter(Boolean);
 
 	// Direct static match (covers fully static trails and the literal
 	// `[id]`/`[slug]` patterns, whose placeholder gets decoded).
 	const direct = getStaticTrail(canonical);
 	if (direct) {
 		if (!hasDynamicPlaceholder(direct)) return direct;
-		const segments = canonical.split("/").filter(Boolean);
 		const lastSeg = segments[segments.length - 1] ?? "";
 		return withDecodedLastSegment(direct, lastSeg);
 	}
 
-	// /exercises/update/<id>
-	if (canonical.startsWith("/exercises/update/")) {
+	// /exercises/update/<id> — exactly 3 segments
+	if (
+		segments.length === 3 &&
+		segments[0] === "exercises" &&
+		segments[1] === "update"
+	) {
 		const base = STATIC_MAP["/exercises/update/[id]"];
 		if (base) {
-			const segments = canonical.split("/").filter(Boolean);
 			const lastSeg = segments[segments.length - 1] ?? "";
 			return withDecodedLastSegment(base, lastSeg);
 		}
 	}
 
-	// /workouts/<slug>
+	// /workouts/<slug> — exactly 2 segments (/workouts/create stays static)
 	if (
-		canonical.startsWith("/workouts/") &&
-		canonical !== "/workouts" &&
-		canonical !== "/workouts/create"
+		segments.length === 2 &&
+		segments[0] === "workouts" &&
+		segments[1] !== "create"
 	) {
 		const base = STATIC_MAP["/workouts/[slug]"];
 		if (base) {
-			const segments = canonical.split("/").filter(Boolean);
 			const lastSeg = segments[segments.length - 1] ?? "";
 			return withDecodedLastSegment(base, lastSeg);
 		}
