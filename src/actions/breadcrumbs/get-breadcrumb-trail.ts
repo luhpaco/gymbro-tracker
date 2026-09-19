@@ -2,10 +2,7 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
-import {
-	buildBreadcrumbs,
-	type Breadcrumb,
-} from "@/lib/breadcrumbs";
+import { buildBreadcrumbs, type Breadcrumb } from "@/lib/breadcrumbs";
 
 const PathnameSchema = z
 	.string()
@@ -31,8 +28,7 @@ export async function getBreadcrumbTrail(
 
 	try {
 		const session = await auth().catch(() => null);
-		const userId = (session as unknown as { user?: { id?: string } })?.user
-			?.id;
+		const userId = (session as unknown as { user?: { id?: string } })?.user?.id;
 		return await buildBreadcrumbs(parsed.data, userId);
 	} catch {
 		return null;
