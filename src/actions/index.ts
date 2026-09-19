@@ -14,3 +14,5 @@ export { authenticate } from "./auth/authenticate";
 export { logout } from "./auth/logout";
 export { registerUser } from "./auth/register";
 export { login } from "./auth/login";
+
+export { getBreadcrumbTrail } from "./breadcrumbs/get-breadcrumb-trail";
