@@ -305,6 +305,8 @@ export const WorkoutCreationForm = ({ exercisesCreated }: Props) => {
 					unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
 					invalid_input:
 						"Revisa los datos de tu entrenamiento e inténtalo de nuevo.",
+					duplicate_tag:
+						"Ya tienes varios entrenamientos con ese nombre en esa fecha. Cambia el nombre o la fecha e inténtalo de nuevo.",
 					error:
 						"Ups, ocurrió un problema al guardar el entrenamiento. Inténtalo de nuevo.",
 				};
