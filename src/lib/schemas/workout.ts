@@ -5,8 +5,7 @@ export { setSchema };
 
 export const setsSchema = z
 	.array(setSchema)
-	.min(1, { message: "Debes agregar al menos un set" })
-	.max(5, { message: "Tómalo con calma!!" });
+	.min(1, { message: "Debes agregar al menos un set" });
 
 export const AddExerciseFormSchema = z.object({
 	exerciseValue: z.string({
