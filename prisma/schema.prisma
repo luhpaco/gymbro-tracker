@@ -53,28 +53,42 @@ model Exercise {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   @@unique([userId, canonicalName])
 }
 
 model Workout {
-  id   String   @id @default(uuid())
-  name String
-  tag  String   @unique
-  date DateTime
-  sets Set[]
+  id        String    @id @default(uuid())
+  name      String
+  tag       String
+  date      DateTime
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  sets      Set[]
 
   user   User   @relation(fields: [userId], references: [id])
   userId String
+
+  @@unique([userId, tag])
 }
 
 model Set {
-  id     String @id @default(uuid())
-  weight Float
-  reps   Int
+  id        String   @id @default(uuid())
+  order     Int
+  weight    Float
+  reps      Int
+  isWarmup  Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   workout   Workout @relation(fields: [workoutId], references: [id])
   workoutId String
 
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
   exerciseId String
+
+  @@index([workoutId, order])
 }

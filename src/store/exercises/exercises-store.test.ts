@@ -12,6 +12,8 @@ function makeExercise(overrides: Partial<Exercise> = {}): Exercise {
 		muscleGroupTag: "chest",
 		userId: "user-1",
 		isActive: true,
+		createdAt: new Date("2026-01-01T00:00:00.000Z"),
+		updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 		...overrides,
 	};
 }

@@ -6,6 +6,7 @@ import {
 	CreateWorkoutFormData,
 } from "@/lib/schemas/workout";
 import prisma from "@/lib/prisma";
+import { buildSetsForCreate } from "@/lib/workout-sets";
 import { Workout } from "@prisma/client";
 
 type CreateWorkoutResult =
@@ -27,13 +28,6 @@ export const createWorkout = async (
 
 	try {
 		const { listExercises, nameWorkout, dateWorkout } = parsed.data;
-		const setsForRecording = listExercises.map((exercise) => {
-			return exercise.sets.map((set) => ({
-				reps: set.reps,
-				weight: set.weight,
-				exerciseId: exercise.exerciseValue,
-			}));
-		});
 		const workout = await prisma.workout.create({
 			data: {
 				userId: session.user.id,
@@ -44,7 +38,7 @@ export const createWorkout = async (
 					"-workout-" +
 					dateWorkout.toISOString(),
 				sets: {
-					create: setsForRecording.flat(),
+					create: buildSetsForCreate(listExercises),
 				},
 			},
 		});

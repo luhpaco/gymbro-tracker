@@ -2,8 +2,11 @@ import { Exercise } from "@/types";
 // Get workouts
 export interface DataItem {
 	id: string;
+	order: number;
 	weight: number;
 	reps: number;
+	isWarmup: boolean;
+	createdAt: Date;
 	workoutId: string;
 	exerciseId: string;
 	exercise: Exercise;
