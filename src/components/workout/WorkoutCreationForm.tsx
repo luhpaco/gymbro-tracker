@@ -46,7 +46,7 @@ import { useToast } from "../ui/use-toast";
 
 type FormValues = z.infer<typeof AddWorkoutFormSchema>;
 
-const emptySets = () => [{ reps: 0, weight: 0 }];
+const emptySets = () => [{ reps: 0, weight: 0, isWarmup: false }];
 
 const validateWeight = (n: number): string | null => {
 	const result = setSchema.shape.weight.safeParse(n);
@@ -191,7 +191,7 @@ const ExerciseRow = ({
 						size='icon'
 						type='button'
 						disabled={setFields.length >= 5}
-						onClick={() => appendSet({ reps: 0, weight: 0 })}
+						onClick={() => appendSet({ reps: 0, weight: 0, isWarmup: false })}
 					>
 						<Plus />
 					</Button>

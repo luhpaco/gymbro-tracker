@@ -5,4 +5,5 @@ export const setSchema = z.object({
 	weight: z.coerce
 		.number()
 		.min(1, { message: "Debes agregar el peso de tus repeticiones" }),
+	isWarmup: z.boolean().default(false),
 });

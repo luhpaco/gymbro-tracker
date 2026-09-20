@@ -5,8 +5,13 @@ import {
 	setSchema,
 	setsSchema,
 } from "./workout";
+import { setSchema as sharedSetSchema } from "./workout-set";
 
 describe("setSchema", () => {
+	it("is the same schema object exported by workout-set", () => {
+		expect(setSchema).toBe(sharedSetSchema);
+	});
+
 	it("accepts a valid set", () => {
 		const result = setSchema.safeParse({ reps: 10, weight: 40 });
 
@@ -18,7 +23,7 @@ describe("setSchema", () => {
 
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data).toEqual({ reps: 10, weight: 40 });
+			expect(result.data).toEqual({ reps: 10, weight: 40, isWarmup: false });
 		}
 	});
 
