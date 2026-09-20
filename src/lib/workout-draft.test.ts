@@ -49,7 +49,7 @@ describe("workout-draft", () => {
 				{
 					exerciseValue: "squat",
 					exerciseName: "Squat",
-					sets: [{ reps: 10, weight: 60 }],
+					sets: [{ reps: 10, weight: 60, isWarmup: false }],
 				},
 			],
 		};
@@ -58,6 +58,48 @@ describe("workout-draft", () => {
 		const loaded = loadDraft();
 
 		expect(loaded).toEqual(draft);
+	});
+
+	it("loads a draft stored before isWarmup existed with isWarmup false", () => {
+		mockStorage.setItem(
+			"gymbro:workout-draft:v1",
+			JSON.stringify({
+				nameWorkout: "Día de pierna",
+				dateWorkout: "2026-01-15T00:00:00.000Z",
+				tagWorkout: "dia-de-pierna",
+				listExercises: [
+					{
+						exerciseValue: "squat",
+						exerciseName: "Squat",
+						sets: [
+							{ reps: 10, weight: 60 },
+							{ reps: 8, weight: 65 },
+						],
+					},
+				],
+			}),
+		);
+
+		const loaded = loadDraft();
+
+		expect(loaded?.listExercises[0].sets).toEqual([
+			{ reps: 10, weight: 60, isWarmup: false },
+			{ reps: 8, weight: 65, isWarmup: false },
+		]);
+	});
+
+	it("keeps the v1 storage key when saving", () => {
+		saveDraft({
+			nameWorkout: "Día de espalda",
+			dateWorkout: null,
+			tagWorkout: "",
+			listExercises: [],
+		});
+
+		expect(mockStorage.setItem).toHaveBeenCalledWith(
+			"gymbro:workout-draft:v1",
+			expect.any(String),
+		);
 	});
 
 	it("returns null and does not throw when the stored value is invalid JSON", () => {

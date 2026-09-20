@@ -13,7 +13,7 @@ describe("setSchema", () => {
 
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data).toEqual({ reps: 10, weight: 40 });
+			expect(result.data).toEqual({ reps: 10, weight: 40, isWarmup: false });
 		}
 	});
 
@@ -37,5 +37,37 @@ describe("setSchema", () => {
 				"Debes agregar el peso de tus repeticiones",
 			);
 		}
+	});
+
+	it("defaults isWarmup to false when omitted", () => {
+		const result = setSchema.safeParse({ reps: 10, weight: 40 });
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.isWarmup).toBe(false);
+		}
+	});
+
+	it("preserves an explicit isWarmup of true", () => {
+		const result = setSchema.safeParse({
+			reps: 10,
+			weight: 40,
+			isWarmup: true,
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.isWarmup).toBe(true);
+		}
+	});
+
+	it("rejects a non-boolean isWarmup", () => {
+		const result = setSchema.safeParse({
+			reps: 10,
+			weight: 40,
+			isWarmup: "yes",
+		});
+
+		expect(result.success).toBe(false);
 	});
 });

@@ -1,11 +1,7 @@
 import { z } from "zod";
+import { setSchema } from "./workout-set";
 
-export const setSchema = z.object({
-	reps: z.coerce.number().min(1, { message: "Debes agregar tus repeticiones" }),
-	weight: z.coerce
-		.number()
-		.min(1, { message: "Debes agregar el peso de tus repeticiones" }),
-});
+export { setSchema };
 
 export const setsSchema = z
 	.array(setSchema)
