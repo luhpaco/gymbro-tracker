@@ -40,6 +40,14 @@ const buildInput = (overrides: Record<string, unknown> = {}): FormData =>
 const createdData = (callIndex = 0) =>
 	mocks.create.mock.calls[callIndex][0].data;
 
+const BASE_TAG = "dia-de-pierna-workout-2026-01-15T00:00:00.000Z";
+
+const tagCollision = (target: unknown = ["userId", "tag"]) =>
+	Object.assign(new Error("Unique constraint failed"), {
+		code: "P2002",
+		meta: { modelName: "Workout", target },
+	});
+
 describe("createWorkout", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -161,5 +169,125 @@ describe("createWorkout", () => {
 
 		expect(createdData()).not.toHaveProperty("startedAt");
 		expect(createdData()).not.toHaveProperty("endedAt");
+	});
+
+	describe("same-day tag collisions", () => {
+		beforeEach(() => {
+			vi.spyOn(console, "error").mockImplementation(() => undefined);
+		});
+
+		it("issues a single create and no lookup when nothing collides", async () => {
+			await createWorkout(buildInput());
+
+			expect(mocks.create).toHaveBeenCalledTimes(1);
+			expect(createdData().tag).toBe(BASE_TAG);
+		});
+
+		it("retries once with the -2 suffix and keeps the typed name", async () => {
+			mocks.create.mockRejectedValueOnce(tagCollision());
+
+			await expect(createWorkout(buildInput())).resolves.toEqual({
+				ok: true,
+				workout: { id: "workout-1" },
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(2);
+			expect(createdData(0).tag).toBe(BASE_TAG);
+			expect(createdData(1).tag).toBe(`${BASE_TAG}-2`);
+			expect(createdData(1).name).toBe("Dia de pierna");
+		});
+
+		it("retries again with the -3 suffix after a second collision", async () => {
+			mocks.create
+				.mockRejectedValueOnce(tagCollision())
+				.mockRejectedValueOnce(tagCollision());
+
+			await expect(createWorkout(buildInput())).resolves.toMatchObject({
+				ok: true,
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(3);
+			expect(createdData(2).tag).toBe(`${BASE_TAG}-3`);
+			expect(createdData(2).name).toBe("Dia de pierna");
+		});
+
+		it("also retries when the target is the constraint name", async () => {
+			mocks.create.mockRejectedValueOnce(
+				tagCollision("Workout_userId_tag_key"),
+			);
+
+			await expect(createWorkout(buildInput())).resolves.toMatchObject({
+				ok: true,
+			});
+
+			expect(createdData(1).tag).toBe(`${BASE_TAG}-2`);
+		});
+
+		it("sends the identical sets on every attempt", async () => {
+			mocks.create
+				.mockRejectedValueOnce(tagCollision())
+				.mockRejectedValueOnce(tagCollision());
+
+			await createWorkout(buildInput());
+
+			expect(createdData(1).sets).toEqual(createdData(0).sets);
+			expect(createdData(2).sets).toEqual(createdData(0).sets);
+			expect(createdData(0).sets.create).toHaveLength(2);
+		});
+
+		it("returns duplicate_tag after exactly ten colliding attempts", async () => {
+			mocks.create.mockRejectedValue(tagCollision());
+
+			await expect(createWorkout(buildInput())).resolves.toEqual({
+				ok: false,
+				code: "duplicate_tag",
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(10);
+			expect(createdData(9).tag).toBe(`${BASE_TAG}-10`);
+		});
+
+		it("succeeds on the last allowed attempt", async () => {
+			for (let index = 0; index < 9; index++) {
+				mocks.create.mockRejectedValueOnce(tagCollision());
+			}
+
+			await expect(createWorkout(buildInput())).resolves.toMatchObject({
+				ok: true,
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(10);
+		});
+
+		it.each([
+			["an unrelated uniqueness target", tagCollision(["id"])],
+			[
+				"the exercise canonical target",
+				tagCollision(["userId", "canonicalName"]),
+			],
+			["a plain error", new Error("connection lost")],
+		])("does not retry %s", async (_label, failure) => {
+			mocks.create.mockRejectedValue(failure);
+
+			await expect(createWorkout(buildInput())).resolves.toEqual({
+				ok: false,
+				code: "error",
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(1);
+		});
+
+		it("stops retrying when a later attempt fails for another reason", async () => {
+			mocks.create
+				.mockRejectedValueOnce(tagCollision())
+				.mockRejectedValueOnce(new Error("connection lost"));
+
+			await expect(createWorkout(buildInput())).resolves.toEqual({
+				ok: false,
+				code: "error",
+			});
+
+			expect(mocks.create).toHaveBeenCalledTimes(2);
+		});
 	});
 });
