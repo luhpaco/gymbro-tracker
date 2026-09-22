@@ -5,43 +5,11 @@ import {
 	setSchema,
 	setsSchema,
 } from "./workout";
+import { setSchema as sharedSetSchema } from "./workout-set";
 
 describe("setSchema", () => {
-	it("accepts a valid set", () => {
-		const result = setSchema.safeParse({ reps: 10, weight: 40 });
-
-		expect(result.success).toBe(true);
-	});
-
-	it("coerces numeric strings", () => {
-		const result = setSchema.safeParse({ reps: "10", weight: "40" });
-
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toEqual({ reps: 10, weight: 40 });
-		}
-	});
-
-	it("rejects reps below the minimum", () => {
-		const result = setSchema.safeParse({ reps: 0, weight: 40 });
-
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(
-				"Debes agregar tus repeticiones",
-			);
-		}
-	});
-
-	it("rejects weight below the minimum", () => {
-		const result = setSchema.safeParse({ reps: 10, weight: 0 });
-
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(
-				"Debes agregar el peso de tus repeticiones",
-			);
-		}
+	it("is the same schema object exported by workout-set", () => {
+		expect(setSchema).toBe(sharedSetSchema);
 	});
 });
 
@@ -57,19 +25,17 @@ describe("setsSchema", () => {
 		}
 	});
 
-	it("accepts up to 5 sets", () => {
-		const sets = Array.from({ length: 5 }, () => ({ reps: 10, weight: 40 }));
+	it.each([1, 6, 20])("accepts %i sets", (count) => {
+		const sets = Array.from({ length: count }, () => ({
+			reps: 10,
+			weight: 40,
+		}));
 
-		expect(setsSchema.safeParse(sets).success).toBe(true);
-	});
-
-	it("rejects more than 5 sets", () => {
-		const sets = Array.from({ length: 6 }, () => ({ reps: 10, weight: 40 }));
 		const result = setsSchema.safeParse(sets);
 
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe("Tómalo con calma!!");
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toHaveLength(count);
 		}
 	});
 });

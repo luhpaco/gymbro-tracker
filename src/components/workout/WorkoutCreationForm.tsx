@@ -46,7 +46,7 @@ import { useToast } from "../ui/use-toast";
 
 type FormValues = z.infer<typeof AddWorkoutFormSchema>;
 
-const emptySets = () => [{ reps: 0, weight: 0 }];
+const emptySets = () => [{ reps: 0, weight: 0, isWarmup: false }];
 
 const validateWeight = (n: number): string | null => {
 	const result = setSchema.shape.weight.safeParse(n);
@@ -190,8 +190,7 @@ const ExerciseRow = ({
 					<Button
 						size='icon'
 						type='button'
-						disabled={setFields.length >= 5}
-						onClick={() => appendSet({ reps: 0, weight: 0 })}
+						onClick={() => appendSet({ reps: 0, weight: 0, isWarmup: false })}
 					>
 						<Plus />
 					</Button>
@@ -306,6 +305,8 @@ export const WorkoutCreationForm = ({ exercisesCreated }: Props) => {
 					unauthorized: "Tu sesión expiró. Vuelve a iniciar sesión.",
 					invalid_input:
 						"Revisa los datos de tu entrenamiento e inténtalo de nuevo.",
+					duplicate_tag:
+						"Ya tienes varios entrenamientos con ese nombre en esa fecha. Cambia el nombre o la fecha e inténtalo de nuevo.",
 					error:
 						"Ups, ocurrió un problema al guardar el entrenamiento. Inténtalo de nuevo.",
 				};
