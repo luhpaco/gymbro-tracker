@@ -4,8 +4,10 @@
 
 Owner-scoped `Workout.tag` uniqueness with non-blocking collision resolution: a composite per-user unique
 constraint replaces the global one, same-owner collisions are resolved by a bounded disambiguating-suffix
-retry driven by the database constraint itself, and only that exact constraint violation is retried —
-so no user is ever refused a legitimate workout because another workout shares its name and date.
+retry driven by the database constraint itself, and only that exact constraint violation is retried — so a
+workout is never refused because another workout shares its name and date while the bounded retry still
+finds a free suffix. Exhausting that bound is the one documented exception: it returns `duplicate_tag`
+instead of saving (see "Exhausting the retry bound returns a specific failure code").
 
 This capability deliberately parallels `exercise-tag-uniqueness`, borrowing its mechanism (composite
 per-user unique constraint plus targeted P2002 mapping) but not its blocking behavior: two sessions with
