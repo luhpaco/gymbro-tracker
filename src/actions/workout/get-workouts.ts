@@ -1,22 +1,7 @@
 "use server";
 
-import { DataItem, GroupedData } from "@/interfaces";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-
-type WorkoutWithSets = Prisma.WorkoutGetPayload<{
-	include: {
-		sets: {
-			include: {
-				exercise: {
-					select: {
-						name: true;
-					};
-				};
-			};
-		};
-	};
-}>;
+import { SET_ORDER_BY, groupSetsByExercise } from "@/lib/workout-sets";
 
 interface GetWorkouts {
 	skip?: number;
@@ -42,9 +27,13 @@ export const getWorkouts = async ({
 				{
 					date: orderByDate,
 				},
+				{
+					createdAt: orderByDate,
+				},
 			],
 			include: {
 				sets: {
+					orderBy: SET_ORDER_BY,
 					include: {
 						exercise: {
 							select: {
@@ -55,19 +44,12 @@ export const getWorkouts = async ({
 				},
 			},
 		});
-		const arrWorkouts = allWorkouts.map((workout: WorkoutWithSets) => ({
+		const arrWorkouts = allWorkouts.map((workout) => ({
 			id: workout.id,
 			name: workout.name,
 			date: workout.date,
 			tag: workout.tag,
-			sets: workout.sets.reduce((acc: GroupedData, item: DataItem) => {
-				const exerciseName = item.exercise.name;
-				if (!acc[exerciseName]) {
-					acc[exerciseName] = [];
-				}
-				acc[exerciseName].push(item);
-				return acc;
-			}, {}),
+			sets: groupSetsByExercise(workout.sets),
 		}));
 
 		return arrWorkouts;

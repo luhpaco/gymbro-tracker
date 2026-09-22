@@ -190,7 +190,6 @@ const ExerciseRow = ({
 					<Button
 						size='icon'
 						type='button'
-						disabled={setFields.length >= 5}
 						onClick={() => appendSet({ reps: 0, weight: 0, isWarmup: false })}
 					>
 						<Plus />
