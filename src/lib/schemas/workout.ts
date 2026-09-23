@@ -28,5 +28,17 @@ export const AddWorkoutFormSchema = z.object({
 		.min(1, { message: "Agrega ejercicios a tu entrenamiento" }),
 });
 
+// Post-save metadata edit. Reuses the create-time name and date validators so
+// the rules stay identical, but stays independent of creation's tag and
+// exercise-list shape. The stored tag is never an input: it is immutable.
+export const UpdateWorkoutFormSchema = z.object({
+	workoutId: z
+		.string()
+		.uuid({ message: "El identificador del entrenamiento no es válido" }),
+	nameWorkout: AddWorkoutFormSchema.shape.nameWorkout,
+	dateWorkout: AddWorkoutFormSchema.shape.dateWorkout,
+});
+
 export type CreateWorkoutFormData = z.infer<typeof AddWorkoutFormSchema>;
 export type Exercise = z.infer<typeof AddExerciseFormSchema>;
+export type UpdateWorkoutInput = z.infer<typeof UpdateWorkoutFormSchema>;
