@@ -1,0 +1,159 @@
+# Delta for Workout Set Ordering
+
+## MODIFIED Requirements
+
+### Requirement: Server-assigned per-workout set order
+
+Every persisted `Set` MUST carry an integer order value assigned by the server. At workout creation, its value MUST be the set's zero-based position in the submitted payload flattened in exercise-major sequence (all sets of the first exercise, then all sets of the second, and so on). For a set added after creation, its value MUST follow the greatest order value currently stored in that workout; successive additions MUST preserve their submitted sequence. The order value MUST be workout-wide, not per-exercise. The server MUST NOT accept or trust any client-supplied order value.
+
+(Previously: Server-assigned workout-wide positions applied only to the flattened workout-creation payload.)
+
+#### Scenario: Single exercise with three sets
+
+- GIVEN a submission with one exercise carrying three sets
+- WHEN the workout is created
+- THEN the three persisted sets carry order `0`, `1` and `2` in submission sequence
+
+#### Scenario: Order is continuous across exercises
+
+- GIVEN a submission with exercise A carrying two sets and exercise B carrying two sets, in that sequence
+- WHEN the workout is created
+- THEN A's sets carry order `0` and `1`
+- AND B's sets carry order `2` and `3`
+- AND no order value repeats within the workout
+
+#### Scenario: Interleaved exercises round-trip
+
+- GIVEN a submission whose flattened sequence is bench, squat, bench
+- WHEN the workout is created and then read back
+- THEN the sets are returned in the bench, squat, bench sequence
+- AND the second bench set carries a higher order value than the squat set
+
+#### Scenario: Client-supplied order is ignored
+
+- GIVEN a submission that includes an order value on each set
+- WHEN the workout is created
+- THEN the persisted order values are the server-derived flattened positions
+- AND the client-supplied values are not persisted
+
+#### Scenario: Order restarts per workout
+
+- GIVEN two workouts are created in sequence, each with two sets
+- WHEN both are persisted
+- THEN each workout's sets carry order `0` and `1`
+- AND the second workout's order values do not continue from the first
+
+#### Scenario: Added sets follow the current maximum, including gaps
+
+- GIVEN a saved workout contains sets with order `0` and `3` across its exercises
+- WHEN its owner adds two sets to an exercise already in that workout
+- THEN the added sets carry order `4` and `5` in submitted sequence
+- AND the prior sets retain order `0` and `3`
+
+#### Scenario: Client-supplied order cannot reorder a post-save addition
+
+- GIVEN a saved workout whose greatest stored order value is `3`
+- WHEN its owner adds a set with a client-supplied order value of `0`
+- THEN the new set carries server-assigned order `4`
+- AND no existing set's order changes
+
+### Requirement: Deterministic ordered read-back
+
+Every read path that returns a workout's sets — the workout list and the workout detail — MUST return them sorted by order value ascending, then by `createdAt` ascending, then by `id` ascending, including sets added after creation and workouts with sets removed. This sort MUST remain total even if two rows share an order value. No read path MAY rely on `id` alone, and no read path MAY omit an explicit sort.
+
+(Previously: The same total sort applied to creation-time sets, without explicit post-save addition and deletion coverage.)
+
+#### Scenario: Detail read returns entry order
+
+- GIVEN a workout whose sets were persisted with order `0`, `1`, `2`
+- WHEN the workout detail is read
+- THEN the sets are returned in order `0`, `1`, `2`
+
+#### Scenario: List read returns entry order
+
+- GIVEN a workout whose sets were persisted with order `0`, `1`, `2`
+- WHEN the workout list is read
+- THEN that workout's sets are returned in order `0`, `1`, `2`
+- AND the list read applies the same sort as the detail read
+
+#### Scenario: Ordering is independent of id
+
+- GIVEN a workout whose sets carry order `0`, `1`, `2` while their identifiers sort in the reverse sequence
+- WHEN the sets are read back
+- THEN they are returned in order `0`, `1`, `2`
+
+#### Scenario: Ties resolve to a stable total order
+
+- GIVEN two sets of one workout share the same order value
+- WHEN the sets are read back repeatedly
+- THEN the returned sequence is identical on every read
+
+#### Scenario: Post-save changes read back consistently
+
+- GIVEN a saved workout contains sets with order `0`, `1`, `2`
+- WHEN its owner removes the set at order `1` and adds another set
+- THEN its detail and list reads return the remaining sets in order `0`, `2`, `3`
+
+### Requirement: Order values are non-unique and gap-tolerant
+
+The stored order value MUST NOT be constrained to be unique within a workout, and gaps in the sequence MUST be tolerated rather than triggering re-sequencing. Removing any saved set, including the sets of a removed exercise, MUST leave surviving sets' stored order values unchanged. The data layer MUST carry a non-unique index supporting retrieval of a workout's sets in order.
+
+(Previously: Gap-tolerant reads and non-unique indexing were required, but post-save removals were not explicitly required to preserve gaps.)
+
+#### Scenario: Gapped sequence reads in ascending order
+
+- GIVEN a workout whose sets carry order `0`, `1`, `3`
+- WHEN the sets are read back
+- THEN they are returned in the sequence `0`, `1`, `3`
+- AND no error or re-sequencing occurs
+
+#### Scenario: Duplicate order values are accepted by the data layer
+
+- GIVEN two sets of one workout are written with the same order value
+- WHEN the write is attempted
+- THEN it does not violate a uniqueness constraint
+
+#### Scenario: Set deletion leaves a gap
+
+- GIVEN an owned workout has sets with order `0`, `1`, `2`
+- WHEN its owner removes the set with order `1`
+- THEN the surviving sets retain order `0` and `2`
+- AND neither is renumbered
+
+#### Scenario: Exercise removal leaves surviving orders unchanged
+
+- GIVEN an owned workout has exercise A with order `0` and exercise B with orders `1`, `2`
+- WHEN its owner removes exercise A and its sets
+- THEN B's sets retain order `1` and `2`
+
+### Requirement: Warmup flag persistence
+
+Every `Set` MUST carry a boolean warmup flag that defaults to `false` and is persisted from a valid submitted payload, including sets added after workout creation. The pre-existing workout-creation flow MUST NOT add a user-facing warmup control as a consequence of this requirement, and series counts in dashboards, lists and summaries MUST remain unchanged.
+
+(Previously: Warmup persistence and unchanged series counts covered workout creation only, with no user-facing control introduced by that change.)
+
+#### Scenario: Warmup flag defaults to false
+
+- GIVEN a submission whose sets omit the warmup flag
+- WHEN the workout is created
+- THEN every persisted set carries the warmup flag `false`
+
+#### Scenario: Submitted warmup flag is persisted
+
+- GIVEN a submission whose first set carries the warmup flag `true`
+- WHEN the workout is created and read back
+- THEN the first set carries the warmup flag `true`
+- AND the remaining sets carry `false`
+
+#### Scenario: Series counts are unaffected
+
+- GIVEN a workout containing both warmup and working sets
+- WHEN any dashboard, workout list or summary surface counts its series
+- THEN the count includes every set, exactly as it did before this change
+
+#### Scenario: Post-save warmup state persists
+
+- GIVEN an owner adds one set with warmup flag `true` and another without a warmup flag to an existing workout exercise
+- WHEN the workout is read back
+- THEN the first added set has warmup flag `true`
+- AND the second added set has warmup flag `false`
