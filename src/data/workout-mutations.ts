@@ -50,6 +50,51 @@ export const updateOwnedWorkoutMetadata = async (
 const MAX_TRANSACTION_ATTEMPTS = 3;
 
 /**
+ * Inclusive bounds, in milliseconds, of the jittered wait between retry
+ * attempts. The window is deliberately tiny: it only has to outlive the ~1-2 ms
+ * peer transaction whose commit caused the conflict. The common single-user
+ * path never conflicts, so it never waits at all.
+ */
+const RETRY_BACKOFF_MIN_MS = 5;
+const RETRY_BACKOFF_MAX_MS = 25;
+
+const defaultSleep = (milliseconds: number): Promise<void> =>
+	new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+/**
+ * The wait used between retry attempts. Held in module state only so the mocked
+ * Vitest suite can inject an immediate replacement and never wait on a real
+ * timer; production always uses `defaultSleep`.
+ */
+let sleepBetweenAttempts = defaultSleep;
+
+/**
+ * Test seam: swaps the inter-attempt wait and returns a function that restores
+ * the previous one. Production code never calls this.
+ */
+export const overrideTransactionRetrySleep = (
+	sleep: (milliseconds: number) => Promise<void>,
+): (() => void) => {
+	const previous = sleepBetweenAttempts;
+	sleepBetweenAttempts = sleep;
+	return () => {
+		sleepBetweenAttempts = previous;
+	};
+};
+
+/**
+ * Bounded, jittered wait for the gap after a failed attempt: an integer in
+ * [5, 25] ms. The jitter de-correlates two losers that would otherwise retry in
+ * lockstep and re-collide. `random` is injectable so the window can be asserted
+ * without depending on `Math.random`.
+ */
+export const computeRetryBackoff = (
+	random: () => number = Math.random,
+): number =>
+	RETRY_BACKOFF_MIN_MS +
+	Math.floor(random() * (RETRY_BACKOFF_MAX_MS - RETRY_BACKOFF_MIN_MS + 1));
+
+/**
  * Thrown when a write's affected-row count proves the target disappeared inside
  * the transaction. Throwing is what rolls the transaction back; the caller maps
  * it to `not_found`, and it is never retried.
@@ -67,6 +112,13 @@ const isTransactionConflict = (error: unknown): boolean =>
  * operation re-reads membership and guard counts on every attempt, so a retry
  * observes the state left by the winning transaction. A coded refusal or a stale
  * target is returned/thrown by the operation and is never retried.
+ *
+ * A short bounded jittered wait separates the attempts: an immediate retry races
+ * the still-open peer transaction and exhausts the budget, whereas waiting lets
+ * the retry read the winner's committed rows and return the coded
+ * `last_set`/`last_exercise` refusal instead of failing closed as `error`. The
+ * wait never runs before the first attempt nor after the final one, so an
+ * exhausted retry still fails closed without extra latency.
  */
 const runSerializableTransaction = async <T>(
 	operation: (tx: Prisma.TransactionClient) => Promise<T>,
@@ -80,6 +132,9 @@ const runSerializableTransaction = async <T>(
 		} catch (error) {
 			if (!isTransactionConflict(error)) throw error;
 			conflict = error;
+			if (attempt < MAX_TRANSACTION_ATTEMPTS) {
+				await sleepBetweenAttempts(computeRetryBackoff());
+			}
 		}
 	}
 	throw conflict;

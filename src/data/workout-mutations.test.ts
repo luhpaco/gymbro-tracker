@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
 	const tx = {
@@ -25,8 +25,10 @@ vi.mock("@/lib/prisma", () => ({
 
 import {
 	addOwnedWorkoutSets,
+	computeRetryBackoff,
 	deleteOwnedSet,
 	deleteOwnedWorkout,
+	overrideTransactionRetrySleep,
 	removeOwnedWorkoutExercise,
 } from "./workout-mutations";
 
@@ -79,9 +81,16 @@ const alwaysConflict = () => {
 	});
 };
 
+// Injected for the whole mocked suite so no test ever waits on a real timer.
+// `retrySleep` stands in for the production bounded sleep and records how many
+// times it was asked to wait, which is what proves WHEN the delay runs.
+const retrySleep = vi.fn(async (_milliseconds: number) => {});
+let restoreRetrySleep: () => void = () => {};
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.outcomes.length = 0;
+	restoreRetrySleep = overrideTransactionRetrySleep(retrySleep);
 
 	mocks.tx.workout.findFirst.mockResolvedValue({
 		id: WORKOUT_ID,
@@ -97,6 +106,10 @@ beforeEach(() => {
 	mocks.tx.set.aggregate.mockResolvedValue({ _max: { order: -1 } });
 	mocks.tx.set.createMany.mockResolvedValue({ count: 1 });
 	mocks.transaction.mockImplementation(runCallback);
+});
+
+afterEach(() => {
+	restoreRetrySleep();
 });
 
 describe("deleteOwnedWorkout", () => {
@@ -460,5 +473,117 @@ describe("addOwnedWorkoutSets", () => {
 
 		expect(mocks.transaction).toHaveBeenCalledTimes(3);
 		expect(mocks.tx.set.createMany).not.toHaveBeenCalled();
+	});
+});
+
+describe("serializable retry backoff", () => {
+	it("never waits before the first attempt when that attempt commits", async () => {
+		await expect(deleteOwnedWorkout(USER_ID, WORKOUT_ID)).resolves.toEqual({
+			ok: true,
+			tag: STORED_TAG,
+		});
+
+		expect(mocks.transaction).toHaveBeenCalledTimes(1);
+		expect(retrySleep).not.toHaveBeenCalled();
+	});
+
+	it("waits once, with a bounded jittered delay, strictly between the failed attempt and the retry", async () => {
+		failOnceWithConflict();
+
+		await expect(deleteOwnedWorkout(USER_ID, WORKOUT_ID)).resolves.toEqual({
+			ok: true,
+			tag: STORED_TAG,
+		});
+
+		expect(mocks.transaction).toHaveBeenCalledTimes(2);
+		expect(retrySleep).toHaveBeenCalledTimes(1);
+
+		const waited = retrySleep.mock.calls[0][0];
+		expect(waited).toBeGreaterThanOrEqual(5);
+		expect(waited).toBeLessThanOrEqual(25);
+
+		// The wait runs after the first attempt already failed and before the
+		// retry runs, so it can never precede the first attempt.
+		expect(retrySleep.mock.invocationCallOrder[0]).toBeGreaterThan(
+			mocks.transaction.mock.invocationCallOrder[0],
+		);
+		expect(retrySleep.mock.invocationCallOrder[0]).toBeLessThan(
+			mocks.transaction.mock.invocationCallOrder[1],
+		);
+	});
+
+	it("waits between attempts but never after the final failed attempt", async () => {
+		alwaysConflict();
+
+		await expect(deleteOwnedWorkout(USER_ID, WORKOUT_ID)).resolves.toEqual({
+			ok: false,
+			code: "error",
+		});
+
+		expect(mocks.transaction).toHaveBeenCalledTimes(3);
+		// Two gaps between three attempts; the exhausted final attempt adds none,
+		// so a genuine exhaustion still fails closed immediately.
+		expect(retrySleep).toHaveBeenCalledTimes(2);
+	});
+
+	it("counts one wait per retryable conflict across the retry loop", async () => {
+		mocks.transaction.mockImplementation(
+			async (callback: TransactionCallback) => {
+				await callback(mocks.tx);
+				throw conflictError();
+			},
+		);
+
+		await expect(
+			addOwnedWorkoutSets(USER_ID, buildAddInput([{ weight: 60, reps: 8 }])),
+		).resolves.toEqual({ ok: false, code: "error" });
+
+		expect(mocks.transaction).toHaveBeenCalledTimes(3);
+		expect(retrySleep).toHaveBeenCalledTimes(2);
+	});
+
+	it("short-circuits a coded refusal and a not_found without waiting or retrying", async () => {
+		mocks.tx.set.count.mockResolvedValue(1);
+
+		await expect(
+			deleteOwnedSet(USER_ID, { workoutId: WORKOUT_ID, setId: SET_ID }),
+		).resolves.toEqual({ ok: false, code: "last_set" });
+		expect(mocks.transaction).toHaveBeenCalledTimes(1);
+		expect(retrySleep).not.toHaveBeenCalled();
+
+		mocks.transaction.mockClear();
+		mocks.tx.workout.findFirst.mockResolvedValue(null);
+
+		await expect(deleteOwnedWorkout(USER_ID, WORKOUT_ID)).resolves.toEqual({
+			ok: false,
+			code: "not_found",
+		});
+		expect(mocks.transaction).toHaveBeenCalledTimes(1);
+		expect(retrySleep).not.toHaveBeenCalled();
+	});
+});
+
+describe("computeRetryBackoff", () => {
+	it("returns the window floor for the lowest draw and the window ceiling for the highest", () => {
+		expect(computeRetryBackoff(() => 0)).toBe(5);
+		expect(computeRetryBackoff(() => 0.999999999)).toBe(25);
+	});
+
+	it("keeps every draw inside the 5–25 ms bound and always integral", () => {
+		for (const draw of [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1 - Number.EPSILON]) {
+			const delay = computeRetryBackoff(() => draw);
+			expect(Number.isInteger(delay)).toBe(true);
+			expect(delay).toBeGreaterThanOrEqual(5);
+			expect(delay).toBeLessThanOrEqual(25);
+		}
+	});
+
+	it("actually jitters: distinct draws produce more than one delay", () => {
+		const delays = new Set(
+			[0, 0.2, 0.4, 0.6, 0.8, 0.99].map((draw) =>
+				computeRetryBackoff(() => draw),
+			),
+		);
+		expect(delays.size).toBeGreaterThan(1);
 	});
 });
