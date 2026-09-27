@@ -174,6 +174,25 @@ describe("updateWorkout", () => {
 		expect(mocks.revalidatePath).not.toHaveBeenCalled();
 	});
 
+	it("rejects a non-string name before any lookup or write", async () => {
+		await expect(
+			updateWorkout(buildInput({ nameWorkout: 123 })),
+		).resolves.toEqual({ ok: false, code: "invalid_input" });
+
+		expect(mocks.findFirst).not.toHaveBeenCalled();
+		expect(mocks.updateMany).not.toHaveBeenCalled();
+		expect(mocks.revalidatePath).not.toHaveBeenCalled();
+	});
+
+	it("ignores extra unknown fields and succeeds with valid name and date", async () => {
+		await expect(
+			updateWorkout(buildInput({ unexpectedField: "ignored", another: 42 })),
+		).resolves.toEqual({ ok: true });
+
+		expect(mocks.updateMany).toHaveBeenCalledTimes(1);
+		expect(mocks.revalidatePath).toHaveBeenCalledTimes(2);
+	});
+
 	it("returns error without touching the database when auth itself throws", async () => {
 		mocks.auth.mockRejectedValue(new Error("headers unavailable"));
 

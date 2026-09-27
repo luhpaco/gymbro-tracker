@@ -178,6 +178,70 @@ describe("addSets", () => {
 		expect(mocks.revalidatePath).toHaveBeenNthCalledWith(2, "/workouts");
 	});
 
+	it("accepts a zero-weight set as valid under the shared set rule", async () => {
+		await expect(
+			addSets(buildInput({ sets: [{ weight: 0, reps: 12 }] })),
+		).resolves.toEqual({ ok: true });
+
+		const [, forwarded] = mocks.addOwnedWorkoutSets.mock.calls[0];
+		expect(forwarded.sets).toEqual([{ weight: 0, reps: 12, isWarmup: false }]);
+	});
+
+	it("rejects a non-boolean warmup flag under the shared set rule", async () => {
+		await expect(
+			addSets(buildInput({ sets: [{ weight: 60, reps: 8, isWarmup: "yes" }] })),
+		).resolves.toEqual({ ok: false, code: "invalid_input" });
+
+		expect(mocks.addOwnedWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.revalidatePath).not.toHaveBeenCalled();
+	});
+
+	it("strips injected orders from multiple sets while preserving input sequence", async () => {
+		await addSets(
+			buildInput({
+				sets: [
+					{ weight: 60, reps: 8, order: 99 },
+					{ weight: 65, reps: 6, order: 0 },
+					{ weight: 70, reps: 4, order: -5 },
+				],
+			}),
+		);
+
+		const [, forwarded] = mocks.addOwnedWorkoutSets.mock.calls[0];
+		expect(forwarded.sets).toEqual([
+			{ weight: 60, reps: 8, isWarmup: false },
+			{ weight: 65, reps: 6, isWarmup: false },
+			{ weight: 70, reps: 4, isWarmup: false },
+		]);
+		for (const set of forwarded.sets) {
+			expect(set).not.toHaveProperty("order");
+		}
+	});
+
+	it("rejects a set missing weight under the shared set rule", async () => {
+		await expect(
+			addSets(
+				buildInput({
+					sets: [{ reps: 8 }] as unknown as AddSetsPayload["sets"],
+				}),
+			),
+		).resolves.toEqual({ ok: false, code: "invalid_input" });
+
+		expect(mocks.addOwnedWorkoutSets).not.toHaveBeenCalled();
+	});
+
+	it("rejects a set missing reps under the shared set rule", async () => {
+		await expect(
+			addSets(
+				buildInput({
+					sets: [{ weight: 60 }] as unknown as AddSetsPayload["sets"],
+				}),
+			),
+		).resolves.toEqual({ ok: false, code: "invalid_input" });
+
+		expect(mocks.addOwnedWorkoutSets).not.toHaveBeenCalled();
+	});
+
 	it("returns error without touching the data layer when auth itself throws", async () => {
 		mocks.auth.mockRejectedValue(new Error("headers unavailable"));
 
