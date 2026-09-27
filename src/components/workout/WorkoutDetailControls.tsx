@@ -10,9 +10,12 @@ import { updateWorkout } from "@/actions/workout/update-workout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TornStrip } from "@/components/ui/torn-strip";
 import { useToast } from "@/components/ui/use-toast";
+import type { DataItem } from "@/interfaces";
 import { Check, Trash2, X } from "lucide-react";
 
+import { WorkoutDetailSets } from "./WorkoutDetailSets";
 import {
 	buildAddSetPayload,
 	formatDateForInput,
@@ -20,29 +23,16 @@ import {
 	isPending,
 	parseDateInput,
 	validateAddSetDraft,
+	type ExerciseSetGroup,
 	type PendingConfirmation,
 } from "./workout-detail-controls.logic";
-
-interface SetSummary {
-	id: string;
-	weight: number;
-	reps: number;
-	isWarmup: boolean;
-	order: number;
-}
-
-interface ExerciseGroup {
-	exerciseName: string;
-	exerciseId: string;
-	sets: SetSummary[];
-}
 
 export interface WorkoutDetailControlsProps {
 	workoutId: string;
 	storedTag: string;
 	name: string;
 	date: string;
-	exercises: ExerciseGroup[];
+	exercises: ExerciseSetGroup<DataItem>[];
 }
 
 interface AddSetDraft {
@@ -52,7 +42,7 @@ interface AddSetDraft {
 }
 
 const buildEmptyDrafts = (
-	exercises: ExerciseGroup[],
+	exercises: ExerciseSetGroup<DataItem>[],
 ): Record<string, AddSetDraft> => {
 	const drafts: Record<string, AddSetDraft> = {};
 	for (const exercise of exercises) {
@@ -197,6 +187,13 @@ export const WorkoutDetailControls = ({
 		}));
 	};
 
+	// The set whose removal request is in flight, if any, so the row can disable
+	// its confirm control while the single pending confirmation stays locked.
+	const submittingSetId =
+		pending?.kind === "set" && submitting[`set-${pending.id}`]
+			? pending.id
+			: null;
+
 	return (
 		<div className='flex flex-col gap-6'>
 			<form
@@ -237,108 +234,66 @@ export const WorkoutDetailControls = ({
 				<section
 					key={exercise.exerciseId}
 					className='flex flex-col gap-4'
-					aria-labelledby={`exercise-heading-${exercise.exerciseId}`}
+					aria-label={exercise.exerciseName}
 				>
-					<div className='flex items-center justify-between gap-4'>
-						<h3
-							id={`exercise-heading-${exercise.exerciseId}`}
-							className='text-base font-medium'
-						>
-							{exercise.exerciseName}
-						</h3>
-						{isPending(pending, "exercise", exercise.exerciseId) ? (
-							<div className='flex items-center gap-2'>
-								<span className='text-sm text-muted-foreground'>
-									¿Eliminar ejercicio?
-								</span>
-								<Button
-									type='button'
-									size='icon'
-									variant='destructive'
-									aria-label={`Confirmar eliminar ${exercise.exerciseName}`}
-									disabled={submitting[`exercise-${exercise.exerciseId}`]}
-									onClick={() => confirmRemoveExercise(exercise.exerciseId)}
-									className='min-h-11 min-w-11'
-								>
-									<Check className='h-5 w-5' />
-								</Button>
-								<Button
-									type='button'
-									size='icon'
-									variant='outline'
-									aria-label='Cancelar eliminación'
-									onClick={cancelPending}
-									className='min-h-11 min-w-11'
-								>
-									<X className='h-5 w-5' />
-								</Button>
-							</div>
-						) : (
-							<Button
-								type='button'
-								size='icon'
-								variant='ghost'
-								aria-label={`Eliminar ejercicio ${exercise.exerciseName}`}
-								onClick={() => requestRemove("exercise", exercise.exerciseId)}
-								className='min-h-11 min-w-11 text-destructive'
-							>
-								<Trash2 className='h-5 w-5' />
-							</Button>
-						)}
-					</div>
-
-					<ol className='flex flex-col gap-2'>
-						{exercise.sets.map((set, index) => (
-							<li
-								key={set.id}
-								className='flex items-center justify-between gap-2'
-							>
-								<span className='text-sm text-muted-foreground'>
-									Serie {index + 1}: {set.weight}kg × {set.reps}
-									{set.isWarmup ? " (calentamiento)" : ""}
-								</span>
-								{isPending(pending, "set", set.id) ? (
-									<div className='flex shrink-0 items-center gap-2'>
-										<span className='text-sm text-muted-foreground'>
-											¿Eliminar?
-										</span>
-										<Button
-											type='button'
-											size='icon'
-											variant='destructive'
-											aria-label={`Confirmar eliminar serie ${index + 1}`}
-											disabled={submitting[`set-${set.id}`]}
-											onClick={() => confirmDeleteSet(set.id)}
-											className='min-h-11 min-w-11'
-										>
-											<Check className='h-5 w-5' />
-										</Button>
-										<Button
-											type='button'
-											size='icon'
-											variant='outline'
-											aria-label='Cancelar eliminación'
-											onClick={cancelPending}
-											className='min-h-11 min-w-11'
-										>
-											<X className='h-5 w-5' />
-										</Button>
-									</div>
-								) : (
+					<TornStrip seed={exercise.exerciseName}>
+						<div className='flex items-start justify-between gap-4'>
+							<TornStrip.Header title={exercise.exerciseName} />
+							{isPending(pending, "exercise", exercise.exerciseId) ? (
+								<div className='flex items-center gap-2'>
+									<span className='text-sm text-muted-foreground'>
+										¿Eliminar ejercicio?
+									</span>
 									<Button
 										type='button'
 										size='icon'
-										variant='ghost'
-										aria-label={`Eliminar serie ${index + 1}`}
-										onClick={() => requestRemove("set", set.id)}
-										className='min-h-11 min-w-11 text-destructive'
+										variant='destructive'
+										aria-label={`Confirmar eliminar ${exercise.exerciseName}`}
+										disabled={submitting[`exercise-${exercise.exerciseId}`]}
+										onClick={() => confirmRemoveExercise(exercise.exerciseId)}
+										className='min-h-11 min-w-11'
 									>
-										<Trash2 className='h-5 w-5' />
+										<Check className='h-5 w-5' />
 									</Button>
-								)}
-							</li>
-						))}
-					</ol>
+									<Button
+										type='button'
+										size='icon'
+										variant='outline'
+										aria-label='Cancelar eliminación'
+										onClick={cancelPending}
+										className='min-h-11 min-w-11'
+									>
+										<X className='h-5 w-5' />
+									</Button>
+								</div>
+							) : (
+								<Button
+									type='button'
+									size='icon'
+									variant='ghost'
+									aria-label={`Eliminar ejercicio ${exercise.exerciseName}`}
+									onClick={() => requestRemove("exercise", exercise.exerciseId)}
+									className='min-h-11 min-w-11 text-destructive'
+								>
+									<Trash2 className='h-5 w-5' />
+								</Button>
+							)}
+						</div>
+
+						<TornStrip.Body className='mt-4'>
+							<WorkoutDetailSets
+								exerciseName={exercise.exerciseName}
+								sets={exercise.sets}
+								removal={{
+									pendingId: pending?.kind === "set" ? pending.id : null,
+									submittingId: submittingSetId,
+									onRequestRemove: (setId) => requestRemove("set", setId),
+									onConfirmRemove: confirmDeleteSet,
+									onCancelRemove: cancelPending,
+								}}
+							/>
+						</TornStrip.Body>
+					</TornStrip>
 
 					<form
 						className='flex flex-col gap-3'

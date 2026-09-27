@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	buildAddSetPayload,
+	buildExerciseGroups,
 	formatDateForInput,
 	getMutationMessage,
 	isPending,
@@ -142,6 +143,56 @@ describe("workout-detail-controls.logic", () => {
 
 		it("returns false when no confirmation is pending", () => {
 			expect(isPending(null, "set", "set-1")).toBe(false);
+		});
+	});
+
+	describe("buildExerciseGroups", () => {
+		it("derives each group's mutation identity from its first recorded set", () => {
+			const groups = buildExerciseGroups({
+				"Bench press": [{ exerciseId: "ex-bench" }],
+				"Back squat": [{ exerciseId: "ex-squat" }],
+			});
+
+			expect(groups).toEqual([
+				{
+					exerciseName: "Bench press",
+					exerciseId: "ex-bench",
+					sets: [{ exerciseId: "ex-bench" }],
+				},
+				{
+					exerciseName: "Back squat",
+					exerciseId: "ex-squat",
+					sets: [{ exerciseId: "ex-squat" }],
+				},
+			]);
+		});
+
+		it("reads the identity from the first set of a multi-set group", () => {
+			const groups = buildExerciseGroups({
+				Bench: [
+					{ exerciseId: "ex-bench", order: 0 },
+					{ exerciseId: "ex-bench", order: 3 },
+				],
+			});
+
+			expect(groups).toHaveLength(1);
+			expect(groups[0].exerciseId).toBe("ex-bench");
+			expect(groups[0].sets).toHaveLength(2);
+			expect(groups[0].sets[1].order).toBe(3);
+		});
+
+		it("keeps the display name separate from the stored exercise id", () => {
+			const groups = buildExerciseGroups({
+				"Press de banca": [{ exerciseId: "ex-uuid-1" }],
+			});
+
+			expect(groups).toEqual([
+				{
+					exerciseName: "Press de banca",
+					exerciseId: "ex-uuid-1",
+					sets: [{ exerciseId: "ex-uuid-1" }],
+				},
+			]);
 		});
 	});
 });

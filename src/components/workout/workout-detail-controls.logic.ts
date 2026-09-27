@@ -29,6 +29,30 @@ export const isPending = (
 	id: string,
 ): boolean => pending?.kind === kind && pending.id === id;
 
+export interface ExerciseSetGroup<TSet> {
+	exerciseName: string;
+	exerciseId: string;
+	sets: TSet[];
+}
+
+/**
+ * Builds the exercise groups the detail controls mutate.
+ *
+ * Mutation identity is the recorded exercise id carried by the group's first
+ * set (`sets[0].exerciseId`), never the display name: the name is only a label,
+ * and the stored id is what the owner-scoped actions must receive. A group
+ * always has at least one set by the saved-workout invariant, so the first set
+ * is present; the empty guard only keeps the helper total.
+ */
+export const buildExerciseGroups = <TSet extends { exerciseId: string }>(
+	setsByExercise: Record<string, TSet[]>,
+): ExerciseSetGroup<TSet>[] =>
+	Object.entries(setsByExercise).map(([exerciseName, sets]) => ({
+		exerciseName,
+		exerciseId: sets[0]?.exerciseId ?? "",
+		sets,
+	}));
+
 export const formatDateForInput = (isoDate: string): string => {
 	const date = new Date(isoDate);
 	if (Number.isNaN(date.getTime())) return "";
