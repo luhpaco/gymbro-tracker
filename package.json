@@ -15,7 +15,8 @@
     "format:check": "git ls-files -co --exclude-standard -z | xargs -0 prettier --check --ignore-unknown",
     "seed": "ts-node src/seed/index.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "validate:workout-concurrency": "ts-node --project tsconfig.scripts.json scripts/validate-workout-concurrency.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
