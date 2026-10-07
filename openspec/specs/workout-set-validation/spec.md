@@ -2,18 +2,13 @@
 
 ## Purpose
 
-The validation rules governing a workout's exercises and sets: one shared set schema, a weight rule that
-admits bodyweight exercises without silently accepting blank input, an integer repetition rule, no upper
-bound on sets per exercise, and a warmup flag that defaults safely so previously stored drafts remain
-loadable.
+The validation rules governing a workout's exercises and sets: one shared set schema, a weight rule that admits bodyweight exercises without silently accepting blank input, an integer repetition rule, no upper bound on sets per exercise (including sets added after creation), last-set and last-exercise refusal codes that keep saved workouts nonempty after deletions, and a warmup flag that defaults safely so previously stored drafts remain loadable.
 
 ## Requirements
 
 ### Requirement: Single shared set schema
 
-The system MUST define the set validation rules exactly once and apply the identical rules everywhere a
-set is validated — workout creation, set update, and the creation form's per-field validators. It MUST
-NOT maintain two independent set schema definitions that can drift apart.
+The system MUST define the set validation rules exactly once and apply the identical rules everywhere a set is validated — workout creation, set update, post-save set addition, and the creation form's per-field validators. Every new post-save mutation MUST validate its input with Zod before any database write. It MUST NOT maintain independent set schema definitions that can drift apart. The existing `updateSet` action's codeless result contract MUST remain unchanged.
 
 #### Scenario: Both entry points enforce identical rules
 
@@ -27,12 +22,16 @@ NOT maintain two independent set schema definitions that can drift apart.
 - WHEN the shared rules change
 - THEN the form's field-level validation reflects the changed rules without a separate definition
 
+#### Scenario: Post-save addition uses the same rules
+
+- GIVEN identical valid or invalid weight, repetitions and warmup values
+- WHEN each value is checked for creation and for post-save set addition
+- THEN both paths accept or reject that value according to the same set rules
+- AND an invalid addition returns `invalid_input` before any database write
+
 ### Requirement: Weight accepts zero and rejects absent or non-finite input
 
-A set's weight MUST be accepted when it is a finite number greater than or equal to `0`, so bodyweight
-exercises are recordable. Blank, `null` and `undefined` weight MUST be rejected BEFORE any numeric
-coercion, so an empty field never silently persists as `0`. Negative and non-finite values MUST be
-rejected. Non-numeric text MUST be rejected.
+A set's weight MUST be accepted when it is a finite number greater than or equal to `0`, so bodyweight exercises are recordable. Blank, `null` and `undefined` weight MUST be rejected BEFORE any numeric coercion, so an empty field never silently persists as `0`. Negative and non-finite values MUST be rejected. Non-numeric text MUST be rejected.
 
 #### Scenario: Zero weight is accepted
 
@@ -92,8 +91,7 @@ rejected. Non-numeric text MUST be rejected.
 
 ### Requirement: Repetitions must be a whole number of at least one
 
-A set's repetitions MUST be accepted only when the value is an integer greater than or equal to `1`.
-Zero, negative, fractional, blank, `null` and non-numeric values MUST be rejected.
+A set's repetitions MUST be accepted only when the value is an integer greater than or equal to `1`. Zero, negative, fractional, blank, `null` and non-numeric values MUST be rejected.
 
 #### Scenario: One repetition is accepted
 
@@ -134,8 +132,7 @@ Zero, negative, fractional, blank, `null` and non-numeric values MUST be rejecte
 
 ### Requirement: No upper bound on sets per exercise
 
-An exercise MUST carry at least one set and MUST NOT be subject to any upper bound on the number of
-sets. Submitting more than five sets for one exercise MUST validate and persist.
+An exercise MUST carry at least one set in a saved workout and MUST NOT be subject to any upper bound on the number of sets, whether sets are submitted during creation or added afterwards. Submitting more than five sets for one exercise MUST validate and persist. Post-save removal of an exercise's final set MUST be refused with `last_set` so the exercise cannot remain empty.
 
 #### Scenario: Six sets are accepted
 
@@ -156,10 +153,22 @@ sets. Submitting more than five sets for one exercise MUST validate and persist.
 - WHEN the workout is validated
 - THEN validation fails with a sets error
 
+#### Scenario: More than five sets after saving
+
+- GIVEN an owned saved workout has an exercise with five sets
+- WHEN its owner adds a valid sixth set to that exercise
+- THEN the addition succeeds and all six sets remain saved
+
+#### Scenario: Removing an exercise's only set is refused
+
+- GIVEN a saved workout has an exercise containing only one set
+- WHEN its owner attempts to remove that set
+- THEN the action returns `{ ok: false, code: "last_set" }`
+- AND that exercise retains its set
+
 ### Requirement: At least one exercise per workout
 
-A workout MUST carry at least one exercise. A submission with an empty exercise list MUST be rejected by
-validation before any database write.
+A workout MUST carry at least one exercise both at creation and after post-save corrections. A creation submission with an empty exercise list MUST be rejected by validation before any database write. Post-save removal of the final exercise MUST be refused with `last_exercise`; deleting the whole workout after explicit confirmation remains a separate operation.
 
 #### Scenario: Zero exercises are rejected
 
@@ -174,10 +183,22 @@ validation before any database write.
 - WHEN the workout is validated
 - THEN validation succeeds
 
+#### Scenario: Last exercise cannot be removed after save
+
+- GIVEN an owned saved workout contains exactly one exercise
+- WHEN its owner attempts to remove that exercise
+- THEN the action returns `{ ok: false, code: "last_exercise" }`
+- AND the workout and all its sets remain unchanged
+
+#### Scenario: One of several exercises can be removed
+
+- GIVEN an owned saved workout contains two exercises, each with at least one set
+- WHEN its owner removes one of those exercises
+- THEN the workout retains the other exercise and all of its sets
+
 ### Requirement: Warmup flag defaults to false
 
-The set schema MUST accept an optional boolean warmup flag that defaults to `false` when absent, and MUST
-reject a non-boolean value.
+The set schema MUST accept an optional boolean warmup flag that defaults to `false` when absent, and MUST reject a non-boolean value.
 
 #### Scenario: Omitted warmup flag parses as false
 
@@ -201,10 +222,7 @@ reject a non-boolean value.
 
 ### Requirement: Previously stored drafts remain loadable
 
-Because the warmup flag defaults to `false`, a workout draft written under the existing
-`gymbro:workout-draft:v1` storage key before this change MUST still parse and restore into the form. The
-draft storage key MUST NOT be version-bumped, and no draft MAY be discarded solely because its sets lack
-a warmup flag.
+Because the warmup flag defaults to `false`, a workout draft written under the existing `gymbro:workout-draft:v1` storage key before this change MUST still parse and restore into the form. The draft storage key MUST NOT be version-bumped, and no draft MAY be discarded solely because its sets lack a warmup flag.
 
 #### Scenario: Pre-change draft restores
 
@@ -221,8 +239,7 @@ a warmup flag.
 
 ### Requirement: Weight guidance reflects the actual rule
 
-Any message shown for an invalid weight MUST describe the rule that is actually enforced. It MUST NOT
-instruct the user to add weight, because `0` is a valid weight.
+Any message shown for an invalid weight MUST describe the rule that is actually enforced. It MUST NOT instruct the user to add weight, because `0` is a valid weight.
 
 #### Scenario: Weight message no longer demands a non-zero value
 

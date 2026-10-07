@@ -54,3 +54,20 @@ The estimate exceeds the 400-line review budget. The orchestrator must ask the u
 ## Phase 5: Delivery Gates
 
 - [x] 5.1 Run final gates: `pnpm test`, `pnpm build`, `pnpm lint`, `pnpm run format:check`, `pnpm exec tsc --noEmit`, and `pnpm exec prisma validate`. Record exact results. The schema and migrations must remain unchanged; do not add automated DOM/component/E2E claims. Observed on commit `ac145f2`: `pnpm test` 31 files / 409 tests pass; `pnpm build` exit 0; `pnpm lint` clean; `pnpm run format:check` clean; `pnpm exec tsc --noEmit` exit 0; `pnpm exec prisma validate` schema valid. The schema and migrations are unchanged, and the DB-level concurrency harness stays outside the DB-free CI suite.
+
+## Archive
+
+- [x] 5.2 Sync the four delta specs to `openspec/specs/` as the durable source. `saved-workout-management` and `saved-workout-set-management` created new. `workout-set-ordering` and `workout-set-validation` modified in place (delta "MODIFIED Requirements" merged into existing requirements; "(Previously: ...)" annotations dropped; no new requirement headings added beyond what the delta required). All four canonical specs end with full requirement + scenario coverage, RFC 2119 keywords preserved.
+- [x] 5.3 Move the change folder from `openspec/changes/workout-edit-delete/` to `openspec/changes/archive/2026-10-05-workout-edit-delete/` via `git mv`. Branch `luhpaco/feat-workout-edit-delete` left intact (work product; cleanup never deletes branches per `.claude/rules/worktrees.md`).
+- [x] 5.4 Write `archive-report.md` summarizing what was implemented, delivery strategy, verification, specs synced, archive contents, source-of-truth updated, follow-ups, and Engram traceability.
+- [x] 5.5 Write `verify-report.md` recording the final revision, mode, observed progress, six local gates, per-capability spec compliance, non-Vitest evidence (real-PostgreSQL concurrency, manual UI QA, post-merge CodeRabbit review), design coherence, and non-blocking caveats.
+- [x] 5.6 Notion task `F0.2 · Cimientos: editar y borrar entrenos` updated: `Status` → `Listo`, `Owner` → `Sin asignar`, `Fase / Referencia` → `openspec/changes/archive/2026-10-05-workout-edit-delete/`.
+
+## Outstanding Risks (Carried Out of Archive)
+
+These do not block archive (the change is complete on `master`) and remain in the Notion backlog:
+
+1. **Backup recovery verification (task 4.3)**: must be resolved in a target environment before irreversible deletion is enabled anywhere real.
+2. **`revalidatePath` atomicity (task 4.3)**: the action contract cannot report DB-commit success vs. cache-invalidation failure separately. Required resolution before rollout.
+3. **Dialog close target 16×16**: shared `src/components/ui/dialog.tsx` primitive, affects every dialog in the app, tracked separately.
+4. **`updateSet` contract**: codeless `{ ok: boolean }` preserved by this change; alignment with the coded-union pattern is an out-of-scope follow-up.
