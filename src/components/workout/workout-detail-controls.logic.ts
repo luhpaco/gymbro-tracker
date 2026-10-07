@@ -1,3 +1,5 @@
+import { setSchema } from "@/lib/schemas/workout-set";
+
 export type MutationCode =
 	| "unauthorized"
 	| "invalid_input"
@@ -79,27 +81,11 @@ interface AddSetValues {
 export const validateAddSetDraft = (
 	draft: AddSetDraft,
 ): AddSetValues | null => {
-	const weight = Number(draft.weight);
-	if (
-		draft.weight.trim() === "" ||
-		Number.isNaN(weight) ||
-		!Number.isFinite(weight) ||
-		weight < 0
-	) {
-		return null;
-	}
-
-	const reps = Number(draft.reps);
-	if (
-		draft.reps.trim() === "" ||
-		Number.isNaN(reps) ||
-		!Number.isInteger(reps) ||
-		reps < 1
-	) {
-		return null;
-	}
-
-	return { weight, reps };
+	if (draft.weight.trim() === "" || draft.reps.trim() === "") return null;
+	const weight = setSchema.shape.weight.safeParse(Number(draft.weight));
+	const reps = setSchema.shape.reps.safeParse(Number(draft.reps));
+	if (!weight.success || !reps.success) return null;
+	return { weight: weight.data, reps: reps.data };
 };
 
 interface AddSetPayloadValues {
