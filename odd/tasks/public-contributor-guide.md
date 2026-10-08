@@ -57,8 +57,8 @@ The repository is public but has no contributor guide. Its agent instructions de
 - Parent normalized `CONTRIBUTING.md` with `pnpm exec prettier --write --ignore-path /dev/null CONTRIBUTING.md`; then `pnpm exec prettier --check --ignore-path /dev/null README.md CONTRIBUTING.md .github/PULL_REQUEST_TEMPLATE.md` passed.
 - Parent `git diff --check` passed; README-to-guide and guide-to-template relative links resolve; whitespace and EOF checks passed for all three Markdown files.
 - Native assessment: medium (`executable_change` in the PR template); RDD is off. Writer self-verification and parent structural/command spot-check are recorded.
-- Work-unit commit pending (orchestrator-owned).
+- Work-unit commit: `2999d9f docs(contributing): add public contribution guide`.
 
 ## Next step
 
-Create the work-unit commit, then record its identity here and in the Engram mirror.
+CG-1 and CG-2 are complete. Review the separately tracked GitHub branch-protection settings before relying on automatic enforcement.
