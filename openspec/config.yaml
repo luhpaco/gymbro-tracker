@@ -12,16 +12,19 @@ context: |
 
 rules:
   proposal:
+    - Create proposal.md for every change; keep it brief
     - Include rollback plan for risky changes
   specs:
     - Use Given/When/Then for scenarios
     - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
   design:
-    - Include sequence diagrams for complex flows
+    - Create design.md only for a meaningful technical decision or risk
     - Document architecture decisions with rationale
+    - Include sequence diagrams for complex flows
   tasks:
-    - Group by phase, use hierarchical numbering
-    - Keep tasks completable in one session
+    - The detailed checklist lives in odd/tasks/<feature>.md (versioned in Git, mirrored in Engram)
+    - tasks.md is a brief index that points to that checklist; do not duplicate checkboxes here
+    - Group checklist items by phase, use stable task identifiers, and size work units for one session when practical
   apply:
     guidelines:
       - Follow existing feature-based server actions pattern
@@ -35,6 +38,9 @@ rules:
     coverage_threshold: 0
   archive:
     - Warn before merging destructive deltas
+    - Archive the detailed ODD task doc with the dated change folder
+    - Sync behavior deltas to openspec/specs/
+    - Update the Notion task status and archive reference
 
 testing:
   strict_tdd: true

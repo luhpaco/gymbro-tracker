@@ -11,14 +11,21 @@ Workout tracking app. Next.js 15 (App Router/RSC) + React 19 + TypeScript strict
 - **User** — final decision-maker. Approves scope, breaks ties, owns delivery.
 - **Claude Code (this agent)** — planning, validation, verification.
 - **OpenCode (sub-agent)** — execution, implementation. Delegated via the `task` tool.
-- **Pattern**: User → Claude Code plans (`/sdd-new`, `/sdd-ff`) → OpenCode executes (`/sdd-apply`) → Claude Code verifies (`/sdd-verify`) → archive (`/sdd-archive`).
+- **Pattern**: User approves scope → Claude Code plans and verifies → OpenCode executes via the `task` tool. Work runs through ODD; do not rely on deprecated SDD slash commands.
 - Mid-task handoffs go in `design/` — see `design/README.md` before writing there.
 
-## SDD loop
+## ODD workflow
 
-Backend: hybrid (Engram + OpenSpec under `openspec/changes/<name>/`). Per-phase rules: `openspec/config.yaml`. The SDD procedure itself (phases, commands, preflight) is owned by gentle-ai's global workflow — not repeated here.
+ODD is the execution workflow. It owns task progress, work-unit commits, and the single detailed checklist.
 
-**Do not bypass SDD for "small" changes.** If something is truly out-of-band (typo, dead-code removal), log it in the Notion backlog as `Tipo: Housekeeping` first, then execute.
+- **Detailed checklist**: `odd/tasks/<feature>.md`, versioned in Git and mirrored in Engram. It is the sole task checklist — no competing task lists.
+- **OpenSpec change** (`openspec/changes/<name>/`): holds concise change intent. Create a brief `proposal.md` for every change; add behavior deltas under `specs/`; add `design.md` only for a meaningful technical decision or risk.
+- **OpenSpec tasks file** (`openspec/changes/<name>/tasks.md`): a brief index that points to the ODD checklist. It does not duplicate checkboxes.
+- **At close**: archive the detailed ODD task doc with the dated change folder, sync behavior deltas to `openspec/specs/`, and update the Notion task status and archive reference.
+
+Per-phase rules live in `openspec/config.yaml`; the ODD procedure itself is owned by gentle-ai's global workflow and is not repeated here.
+
+**Do not bypass ODD for "small" changes.** If something is truly out-of-band (typo, dead-code removal), log it in the Notion backlog as `Tipo: Housekeeping` first, then execute.
 
 ## Testing & database
 
@@ -39,7 +46,7 @@ Isolated git worktrees (concurrent Claude/OpenCode sessions, DB-isolated tasks, 
 
 1. **Never trust "task done" summaries** — verify with `git log`, `git diff`, or by running the command yourself.
 2. **Secrets stay in `.env`** (gitignored) or OAuth flows — never in source, `design/`, commit messages, or `opencode.json`. Notion MCP uses hosted OAuth; do not reintroduce a local-token pattern.
-3. **Real SDD artifacts live in `openspec/changes/<name>/`.** `design/` is drafts/handoffs only, never committed.
+3. **ODD owns the detailed task checklist; OpenSpec holds change intent and deltas.** Real change artifacts live in `openspec/changes/<name>/`, and `design/` is drafts/handoffs only, never committed.
 4. **Prisma queries stay in `src/lib/` or `src/data/`** — components consume, never query directly.
 5. **Server actions validate with Zod** before touching the DB — no raw `request.json()` or untyped input reaching Prisma.
 6. **Never hand-edit a generated migration file** — roll forward with a new `prisma migrate dev` instead.
@@ -67,6 +74,6 @@ Isolated git worktrees (concurrent Claude/OpenCode sessions, DB-isolated tasks, 
 
 ## Where to start
 
-- New task in the Notion backlog? Read the task, then run `/sdd-new <change-name>`.
-- Mid-task? Check `openspec/changes/` for the active change and read its `proposal.md`.
+- New task in the Notion backlog? Read the task, then start ODD and create `odd/tasks/<feature>.md` as the detailed checklist.
+- Mid-task? Read `odd/tasks/<feature>.md` for progress and the active `openspec/changes/<name>/proposal.md` for intent.
 - Confused about the workflow? Read `openspec/config.yaml` and `design/README.md`.
