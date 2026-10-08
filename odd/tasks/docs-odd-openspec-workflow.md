@@ -47,8 +47,8 @@ The project documentation still describes the legacy SDD command loop and places
 - Structural readback confirmed no legacy `/sdd-*` references remain in the three target docs. Residual legacy references remain in `.claude/rules/testing.md` and `.claude/rules/worktrees.md`, which are outside the authorized edit surfaces; recorded as a follow-up risk, not edited here.
 - `design/README.md` is ignored by `.gitignore` and will remain a local-only change; the tracked workflow guidance is in `CLAUDE.md` and `openspec/config.yaml`.
 - Native risk assessment: medium (`executable_change` in `CLAUDE.md`); RDD is off. Structural verification is recorded instead of a code test.
-- Work-unit commit pending (orchestrator-owned).
+- Work-unit commit: `26f7bc8 docs(workflow): align project guidance with ODD`.
 
 ## Next step
 
-Create the work-unit commit, then record its identity here and in the Engram mirror.
+WF-1 is complete. Review the follow-up risks before starting F0.3.
