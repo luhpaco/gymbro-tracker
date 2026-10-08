@@ -29,3 +29,7 @@ bun dev
 | Add exercise to workout                                              | Create workout                                                       | My workouts                                                          |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | <img src="public/assets/images/readme/Screenshot_5.png" width="300"> | <img src="public/assets/images/readme/Screenshot_6.png" width="300"> | <img src="public/assets/images/readme/Screenshot_7.png" width="300"> |
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose changes, what reviewers look for, and the merge policy.
