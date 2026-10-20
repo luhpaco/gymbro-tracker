@@ -176,7 +176,7 @@ export const LiveSessionScreen = ({ exercises }: LiveSessionScreenProps) => {
 			</TornStrip>
 
 			{session.exercises.length === 0 ? (
-				<p className='text-center text-xs text-card-foreground/70'>
+				<p className='text-center text-xs text-muted-foreground'>
 					Agrega tu primer ejercicio para empezar a registrar series.
 				</p>
 			) : (
@@ -193,6 +193,17 @@ export const LiveSessionScreen = ({ exercises }: LiveSessionScreenProps) => {
 								>
 									<Trash2 size={18} aria-hidden />
 								</button>
+							</div>
+							<div
+								aria-hidden
+								className='grid grid-cols-[2ch_1fr_1fr_auto_auto_auto] items-center gap-2 text-xs text-muted-foreground'
+							>
+								<span className='text-center'>#</span>
+								<span>Peso</span>
+								<span>Reps</span>
+								<span className='w-11' />
+								<span className='w-11' />
+								<span className='w-9' />
 							</div>
 							<ol className='flex flex-col'>
 								{exercise.sets.map((set, index) => (

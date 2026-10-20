@@ -26,6 +26,13 @@ interface LiveSetRowProps {
 	onRemove: () => void;
 }
 
+// Expands the tap area to 44px without changing the layout.
+const STAT_HIT_AREA =
+	"relative after:absolute after:-inset-x-2 after:-inset-y-[10px] after:content-['']";
+
+// A comma stays legible in the marker face where a period can read as "102.5" -> "1025".
+const formatWeight = (value: number): string => String(value).replace(".", ",");
+
 const iconButton =
 	"inline-flex shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40";
 
@@ -54,7 +61,9 @@ export const LiveSetRow = ({
 				value={set.weight}
 				label={`Peso, ${context}`}
 				unit='kg'
-				disabled={done}
+				width='5ch'
+				className={STAT_HIT_AREA}
+				format={formatWeight}
 				onCommit={(next) => onChange({ weight: next })}
 				validate={validateWeight}
 			/>
@@ -62,7 +71,7 @@ export const LiveSetRow = ({
 				value={set.reps}
 				label={`Repeticiones, ${context}`}
 				width='3ch'
-				disabled={done}
+				className={STAT_HIT_AREA}
 				onCommit={(next) => onChange({ reps: next })}
 				validate={validateReps}
 			/>
@@ -71,7 +80,6 @@ export const LiveSetRow = ({
 				aria-pressed={set.isWarmup}
 				aria-label={`Calentamiento, ${context}`}
 				title='Calentamiento'
-				disabled={done}
 				onClick={onToggleWarmup}
 				className={cn(
 					iconButton,
@@ -101,7 +109,9 @@ export const LiveSetRow = ({
 					"h-11 w-11",
 					done
 						? "border-primary bg-primary text-primary-foreground"
-						: "border-foreground/60 text-foreground hover:bg-accent",
+						: valid
+							? "border-card-foreground/60 text-card-foreground hover:bg-accent"
+							: "border-dashed border-muted-foreground text-muted-foreground disabled:opacity-100",
 				)}
 			>
 				<Check size={20} aria-hidden />
