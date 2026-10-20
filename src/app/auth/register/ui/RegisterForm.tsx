@@ -72,7 +72,11 @@ export const RegisterForm = () => {
 	};
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className='w-full space-y-4'>
+			<form
+				method='post'
+				onSubmit={form.handleSubmit(onSubmit)}
+				className='w-full space-y-4'
+			>
 				<div className='flex gap-4 items-center'>
 					<FormField
 						control={form.control}
