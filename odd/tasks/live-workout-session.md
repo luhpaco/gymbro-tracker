@@ -1,7 +1,9 @@
 # Live Workout Session (F1.1)
 
 Objective: a live "workout in progress" mode: start, log sets as they are done, finish; the session lives on the device and syncs on finish.
-Branch: `feat/live-workout-session` · Delivery: chain (forecast ~1100 authored lines, above the 400-line heuristic; strategy pending user choice) · Runner: Vitest (`pnpm test`).
+Branch: `feat/live-workout-session` (tracker) · Delivery: `feature-branch-chain` (forecast ~1100 authored lines; user choice 2026-10-19, "como en F0.2"). Each slice PR targets the tracker branch; the final PR goes tracker -> `master`. · Runner: Vitest (`pnpm test`).
+
+Slices (PRs into the tracker): S-A = T1+T2 (`feat/lws-core`); S-B = T3 (`feat/lws-finish-action`); S-C = T4+T5 (`feat/lws-ui`); S-D = T6+T7 (`feat/lws-offline-verify`).
 Notion: https://app.notion.com/p/3e0b57b76c9b81b1975de50f622e8000 · Epic: https://app.notion.com/p/3e0b57b76c9b81209833dfab1a4f17f1
 
 ## Specs
@@ -33,6 +35,19 @@ Notion: https://app.notion.com/p/3e0b57b76c9b81b1975de50f622e8000 · Epic: https
 - D2: per-set "done" timestamp is stored as `Set.createdAt` (column already exists); no migration.
 - D3: idempotency: client-generated UUID is the `Workout.id`; a retry that hits the primary key returns the already-created workout (owner-scoped lookup) instead of duplicating.
 - D4: no schema change, so no high-risk item 1.
+
+## Contract between T1 (client state) and T3 (server action)
+
+Fixed here so the two units can be built independently; the only seam is this payload.
+
+- Input `FinishLiveSessionInput` (Zod schema `FinishLiveSessionSchema` in `src/lib/schemas/live-session.ts`, owned by T3):
+  - `sessionId`: UUID, becomes `Workout.id` (idempotency key).
+  - `name`: non-empty string (reuse the name rule of `AddWorkoutFormSchema`).
+  - `startedAt`, `endedAt`: dates (`endedAt >= startedAt`); `Workout.date` = `startedAt`.
+  - `exercises`: non-empty array, in logged order, of `{ exerciseId: UUID, sets: non-empty array of { weight, reps, isWarmup, doneAt } }`. `weight`, `reps`, `isWarmup` reuse the shared `setSchema` rules (weight >= 0, no upper bound); `doneAt` is a date used as `Set.createdAt`. `order` is never client input.
+- Result `FinishLiveSessionResult`: `{ ok: true, workout }` or `{ ok: false, code }` with `code` one of `unauthorized | invalid_input | exercise_not_found | duplicate_tag | error`.
+- Rules: every `exerciseId` must belong to the authenticated user (`exercise_not_found` otherwise, indistinguishable from a missing id). A retry with an existing `sessionId` owned by the same user returns `{ ok: true }` with the existing workout and creates nothing; an id owned by another user returns `error` without leaking it. Reuse `buildWorkoutTag`/`nextTagCandidate`/`isWorkoutTagCollision` for the tag and `order` assignment from `buildSetsForCreate`'s approach.
+- T1 exposes `toFinishInput(session, endedAt)` producing exactly this shape.
 
 ## Tasks
 
