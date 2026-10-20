@@ -11,15 +11,18 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useWorkoutDraftSignalStore } from "@/store";
+import { useLiveSessionStore, useWorkoutDraftSignalStore } from "@/store";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { FaHouse } from "react-icons/fa6";
 import { FiActivity, FiLogOut, FiPlus } from "react-icons/fi";
 import { GiGymBag } from "react-icons/gi";
+import { LiveSessionBanner } from "./LiveSessionBanner";
+import { StaleSessionPrompt } from "./StaleSessionPrompt";
 import {
 	isNavigationDestinationActive,
+	shouldShowLiveSessionBanner,
 	shouldSuppressMobileDock,
 } from "./navigation-state";
 
@@ -31,7 +34,7 @@ type NavigationDestination = {
 
 type CreateAction = {
 	label: string;
-	href: "/exercises/create" | "/workouts/create";
+	href: "/exercises/create" | "/workouts/create" | "/workouts/live";
 	icon: ReactNode;
 };
 
@@ -50,6 +53,11 @@ const createActions: CreateAction[] = [
 	{
 		label: "Create workout",
 		href: "/workouts/create",
+		icon: <FiPlus aria-hidden />,
+	},
+	{
+		label: "Start workout",
+		href: "/workouts/live",
 		icon: <FiPlus aria-hidden />,
 	},
 ];
@@ -124,8 +132,15 @@ export function AuthenticatedNavigationShell({
 	const exerciseCount = useWorkoutDraftSignalStore(
 		(state) => state.exerciseCount,
 	);
+	const liveStatus = useLiveSessionStore((state) => state.state.status);
+	const liveHydrated = useLiveSessionStore((state) => state.hydrated);
+	const hydrateLiveSession = useLiveSessionStore((state) => state.hydrate);
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const dockSuppressed = shouldSuppressMobileDock(pathname, exerciseCount);
+
+	useEffect(() => {
+		if (!liveHydrated) hydrateLiveSession();
+	}, [liveHydrated, hydrateLiveSession]);
 
 	return (
 		<div className='min-h-screen bg-background text-foreground'>
@@ -170,8 +185,12 @@ export function AuthenticatedNavigationShell({
 						: "pb-[calc(5.5rem+env(safe-area-inset-bottom))]",
 				)}
 			>
+				{shouldShowLiveSessionBanner(pathname, liveStatus) && (
+					<LiveSessionBanner />
+				)}
 				{children}
 			</div>
+			<StaleSessionPrompt />
 
 			{!dockSuppressed && (
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

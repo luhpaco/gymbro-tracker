@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	isNavigationDestinationActive,
+	shouldShowLiveSessionBanner,
 	shouldSuppressMobileDock,
 } from "./navigation-state";
 
@@ -32,5 +33,34 @@ describe("isNavigationDestinationActive", () => {
 		expect(isNavigationDestinationActive("/workouts-plan", "/workouts")).toBe(
 			false,
 		);
+	});
+});
+
+describe("shouldShowLiveSessionBanner", () => {
+	it("shows for an active or finishing session away from the live screen", () => {
+		expect(shouldShowLiveSessionBanner("/dashboard", "active")).toBe(true);
+		expect(shouldShowLiveSessionBanner("/workouts", "finishing")).toBe(true);
+		expect(shouldShowLiveSessionBanner("/workouts/create", "active")).toBe(
+			true,
+		);
+	});
+
+	it("hides on the live screen itself, including nested paths", () => {
+		expect(shouldShowLiveSessionBanner("/workouts/live", "active")).toBe(false);
+		expect(shouldShowLiveSessionBanner("/workouts/live/", "active")).toBe(
+			false,
+		);
+	});
+
+	it("does not treat a workout slug that merely starts with live as the live screen", () => {
+		expect(shouldShowLiveSessionBanner("/workouts/liverpool", "active")).toBe(
+			true,
+		);
+	});
+
+	it("hides when there is nothing in progress", () => {
+		for (const status of ["none", "synced", "discarded"] as const) {
+			expect(shouldShowLiveSessionBanner("/dashboard", status)).toBe(false);
+		}
 	});
 });
