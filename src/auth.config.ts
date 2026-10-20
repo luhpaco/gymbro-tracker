@@ -29,6 +29,12 @@ export const authConfig: NextAuthConfig = {
 					nextUrl.pathname === item || nextUrl.pathname.startsWith(item + "/"),
 			);
 
+			if (nextUrl.pathname === "/") {
+				return Response.redirect(
+					new URL(isLogged ? "/dashboard" : "/auth/login", nextUrl),
+				);
+			}
+
 			if (isLogged && authRoutes) {
 				return Response.redirect(new URL("/dashboard", nextUrl));
 			}
