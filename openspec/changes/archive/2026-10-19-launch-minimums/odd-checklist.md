@@ -17,7 +17,7 @@ Notion: https://app.notion.com/p/3e0b57b76c9b8145af24e06e065e42d2
 - [x] T1 (S1) — RED/GREEN: `authorized` callback redirects `/`; tests also pin previous behavior of the callback. Route: inline.
 - [x] T2 (S2) — Delete the seed route; check live references (README, scripts, CI, docs). Route: inline.
 - [x] T3 (S3) — `lang="es"`. Route: inline.
-- [ ] T4 (S4) — Run all CI gates; archive change, update Notion. Route: inline.
+- [x] T4 (S4) — Run all CI gates; archive change, update Notion. Route: inline.
 
 ## Log
 
@@ -30,3 +30,4 @@ Notion: https://app.notion.com/p/3e0b57b76c9b8145af24e06e065e42d2
 - Risk: item 3-adjacent (removes a permanent redirect on `/`; previously cached 308 in browsers may linger until cleared, harmless since `/` now redirects anyway).
 - Browser check (2026-10-19, agent-browser): logged out `/` -> `/auth/login`; logged in `/` -> `/dashboard`; `lang="es"`; `/api/seed` 404. Created local test user via the register UI (credentials in gitignored `.env.local` as `TEST_USER_EMAIL`/`TEST_USER_PASSWORD`).
 - Side finding (pre-existing, not fixed): submitting the register form before React hydrates falls back to a native GET and puts the password in the URL query string. Candidate for a backlog ticket.
+- Closed (2026-10-19): PR #54 merged as 01ecba7; change archived to openspec/changes/archive/2026-10-19-launch-minimums/; spec synced to openspec/specs/launch-minimums/.
