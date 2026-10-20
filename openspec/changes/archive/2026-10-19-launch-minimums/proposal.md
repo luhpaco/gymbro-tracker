@@ -14,4 +14,4 @@ Out of scope: landing page, `pnpm seed`, password recovery, email verification, 
 
 ## Tasks
 
-Detailed checklist: `odd/tasks/launch-minimums.md` (single source of progress).
+Detailed checklist: `odd-checklist.md` in this folder (single source of progress).
