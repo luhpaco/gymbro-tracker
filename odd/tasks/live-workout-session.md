@@ -51,8 +51,8 @@ Fixed here so the two units can be built independently; the only seam is this pa
 
 ## Tasks
 
-- [ ] T1 (S7, S12-6) — Pure session state machine and types in `src/lib/live-session.ts` (+ tests): start, add/remove exercise, add/edit/mark set, finish, mark synced, discard, 12h staleness. Route: inline.
-- [ ] T2 (S8) — Versioned localStorage persistence + pending-sync queue, tolerant of corrupt data, in `src/lib/live-session-storage.ts` (+ tests). Route: inline.
+- [x] T1 (S7, S12-6) — Pure session state machine and types in `src/lib/live-session.ts` (+ tests): start, add/remove exercise, add/edit/mark set, finish, mark synced, discard, 12h staleness. Route: inline.
+- [x] T2 (S8) — Versioned localStorage persistence + pending-sync queue, tolerant of corrupt data, in `src/lib/live-session-storage.ts` (+ tests). Route: inline.
 - [ ] T3 (S10, S11) — Zod payload schema + idempotent `finishLiveSession` server action + owner-scoped data function (+ mocked tests). Route: candidate for a delegated writer (disjoint surface, depends only on T1 payload types); decide after the chain strategy is set.
 - [ ] T4 (S1-S3, S9) — Client provider/hook + live session page: start, add exercise via existing selector, set rows, finish/discard. Route: inline.
 - [ ] T5 (S5) — Persistent "in progress" notice in the navigation shell and 12h stale prompt. Route: inline.
@@ -64,3 +64,5 @@ Fixed here so the two units can be built independently; the only seam is this pa
 - L1 (2026-10-19): "Ahora continuando con la siguiente feature" → F1.1 (Notion ticket above, source of truth).
 - L2 (2026-10-19): Product decision from the user: "vamos por dispositivo" (single active session enforced per device, not on the server).
 - Exploration (2026-10-19): `Workout.startedAt/endedAt` nullable (unwired, spec `workout-session-timestamps`), `Set.order/isWarmup/createdAt` exist; `createWorkout` builds the tag from name+date with collision retry; `buildSetsForCreate` assigns order; navigation shell is `AuthenticatedNavigationShell` in `src/app/(routes)/layout.tsx`; the exercise picker is inline in `WorkoutCreationForm`'s `ExerciseRow`. `/workouts/create` stays as the past-workout form.
+- S-A (2026-10-20, branch `feat/lws-core`): T1+T2 done inline. RED observed for both modules (module missing), GREEN: 21 + 9 tests. All five CI gates exit 0. Design note: the persisted `finishing` state is the upload queue (one session per device), so no separate queue structure exists. `toFinishInput` returns `null` unless the state is `finishing`; seam with T3's schema is checked at integration.
+- S-B (2026-10-20, branch `feat/lws-finish-action`, OpenCode in a separate worktree, commit 3fea99e): T3 done by a delegated writer; parent re-ran test/lint/format/tsc (exit 0) and read the diff against the contract. Minor notes: redundant `if (!result.ok || !result.created) return result; return result;` in the data function; `exercises`/`sets` arrays have no upper bound.
