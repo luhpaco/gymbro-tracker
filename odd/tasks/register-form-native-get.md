@@ -22,7 +22,7 @@ Acceptance: no unrelated behavior, schema, migration, or other auth flow changes
 
 ## Tasks
 
-- [x] T1 (S1–S2) — inline; explicit POST on both forms, browser verification and required gates completed. Commit: pending.
+- [x] T1 (S1–S2) — inline; explicit POST on both forms and browser verification completed. Commit: `10237c1`.
 
 ## Log
 
@@ -72,3 +72,5 @@ Added explicit `method='post'` to both auth forms; Zod schemas, React Hook Form 
 The deterministic Vitest suite covers no component/DOM boundary, so no source-text test was added. `pnpm test` passed (31 files, 409 tests); `pnpm lint` passed; `pnpm exec tsc --noEmit` passed; `pnpm build` exited successfully (existing Jose Edge Runtime warnings and a dynamic-server-usage diagnostic for `/workouts/create` appeared). Targeted Prettier check passed for all changed source and documentation files. The required full `pnpm run format:check` remains blocked by the pre-existing dirty `opencode.json`, which was not changed because it belongs to other in-flight work in this worktree.
 
 Risk: none — the requested form submission semantics changed explicitly; no shared helper, persisted data, security boundary, or external API was changed.
+
+Rollback boundary: revert `10237c1` to remove the explicit POST form method and its task/change documentation; no unrelated files need to change.
