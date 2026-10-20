@@ -13,6 +13,7 @@ import {
 	markSynced,
 	removeExercise,
 	removeSet,
+	reopenSession,
 	startSession,
 	toFinishInput,
 	uncompleteSet,
@@ -364,5 +365,20 @@ describe("contract with the finish action", () => {
 				true,
 			]);
 		}
+	});
+});
+
+describe("reopenSession", () => {
+	it("returns a finishing session to active editing, keeping every set", () => {
+		const ready = completeSet(withBenchSet(), "ex-1", "set-1", T1);
+		const finishing = beginFinish(ready, { name: "Push day", now: T2 });
+		const reopened = reopenSession(finishing);
+		expect(reopened).toEqual({ status: "active", session: sessionOf(ready) });
+	});
+
+	it("leaves any other state untouched", () => {
+		const running = withBenchSet();
+		expect(reopenSession(running)).toBe(running);
+		expect(reopenSession(NONE)).toBe(NONE);
 	});
 });

@@ -228,6 +228,12 @@ export const beginFinish = (
 	};
 };
 
+// Lets the user fix a session the server refused, instead of leaving it stuck in the upload queue.
+export const reopenSession = (state: LiveSessionState): LiveSessionState =>
+	state.status === "finishing"
+		? { status: "active", session: state.session }
+		: state;
+
 export const markSynced = (
 	state: LiveSessionState,
 	workoutId: string,
