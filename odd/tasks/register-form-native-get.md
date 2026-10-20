@@ -13,7 +13,7 @@ Source: Notion ticket “Bug: el formulario de registro se envía como GET nativ
 
 Acceptance: browser-native pre-hydration submission cannot put form credentials in a URL; hydrated registration continues to work and preserves existing Zod/react-hook-form validation and `registerUser` behavior. Verify login under the same criteria and fix it if affected.
 
-Checks: browser submission before hydration for register and login; successful registration after hydration; `pnpm test`, `pnpm lint`, `pnpm run format:check`, `pnpm exec tsc --noEmit`, `pnpm build`.
+Checks: native browser form submission bypassing React for register and login; successful registration after hydration; `pnpm test`, `pnpm lint`, `pnpm run format:check`, `pnpm exec tsc --noEmit`, `pnpm build`.
 
 ### S2 — Keep scope limited
 > Out of scope: password recovery, email verification, redesigning the forms, any other file not needed for this fix.
@@ -67,7 +67,7 @@ The register and login forms are plain client form elements using `onSubmit` wit
 Both forms include password fields, so both share the exposure. Use explicit `method="post"` as the smallest defensive change: it prevents credential query-string disclosure without changing the hydrated React Hook Form submit path, though a pre-hydration POST still reloads the page and does not create the user. The repo has no component/DOM test harness, so validate the rendered method and actual navigation in a browser; do not add brittle source-text tests.
 
 ### L3 — Implementation and verification
-Added explicit `method='post'` to both auth forms; Zod schemas, React Hook Form handlers, and server actions remain unchanged. Native-submit browser checks after the edit reported `method: post` for each form and remained on `/auth/register` and `/auth/login` without any credential query parameters. Registration with the `.env.local` test account succeeded and redirected to `/auth/login`; logging into that account succeeded and redirected to `/dashboard`. No network-idle wait was used before browser submission.
+Added explicit `method='post'` to both auth forms; Zod schemas, React Hook Form handlers, and server actions remain unchanged. Native-submit browser checks after the edit called the browser's native `HTMLFormElement.prototype.submit()` (bypassing React), reported `method: post` for each form, and remained on `/auth/register` and `/auth/login` without credential query parameters. Registration with the `.env.local` test account succeeded and redirected to `/auth/login`; logging into that account succeeded and redirected to `/dashboard`. Browser opening did not hold the page before hydration, so strict pre-hydration timing was not captured; the native submission path was directly exercised instead. No network-idle wait was used before browser submission.
 
 The deterministic Vitest suite covers no component/DOM boundary, so no source-text test was added. `pnpm test` passed (31 files, 409 tests); `pnpm lint` passed; `pnpm exec tsc --noEmit` passed; `pnpm build` exited successfully (existing Jose Edge Runtime warnings and a dynamic-server-usage diagnostic for `/workouts/create` appeared). Targeted Prettier check passed for all changed source and documentation files. The required full `pnpm run format:check` remains blocked by the pre-existing dirty `opencode.json`, which was not changed because it belongs to other in-flight work in this worktree.
 
