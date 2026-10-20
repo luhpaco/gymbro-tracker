@@ -20,6 +20,7 @@ const widthClasses = {
 	"2ch": "w-[2ch]",
 	"3ch": "w-[3ch]",
 	"4ch": "w-[4ch]",
+	"5ch": "w-[5ch]",
 } as const;
 
 export interface EditableStatProps {
@@ -30,6 +31,10 @@ export interface EditableStatProps {
 	onCommit: (next: number) => void;
 	validate?: (n: number) => string | null;
 	disabled?: boolean;
+	/** Extra classes for the display button, e.g. to enlarge its touch area. */
+	className?: string;
+	/** Display-only formatting; editing always uses the raw number. */
+	format?: (value: number) => string;
 }
 
 export const EditableStat = ({
@@ -40,6 +45,8 @@ export const EditableStat = ({
 	onCommit,
 	validate,
 	disabled = false,
+	className,
+	format,
 }: EditableStatProps) => {
 	const [editing, setEditing] = React.useState(false);
 	const [draft, setDraft] = React.useState("");
@@ -105,10 +112,11 @@ export const EditableStat = ({
 						"cursor-pointer bg-transparent border-0 border-b-2 border-dashed border-muted-foreground/50 p-0 text-center font-hand tabular-nums text-inherit underline-offset-4",
 						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 						"disabled:pointer-events-none disabled:opacity-50",
-						widthClasses[width]
+						widthClasses[width],
+						className
 					)}
 				>
-					{value}
+					{format ? format(value) : value}
 				</button>
 				{unit ? (
 					<span className='ml-1 font-sans text-xs'>{unit}</span>

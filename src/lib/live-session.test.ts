@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { FinishLiveSessionSchema } from "./schemas/live-session";
 import {
 	LIVE_SESSION_MAX_AGE_MS,
 	type LiveSessionState,
@@ -12,6 +13,7 @@ import {
 	markSynced,
 	removeExercise,
 	removeSet,
+	reopenSession,
 	startSession,
 	toFinishInput,
 	uncompleteSet,
@@ -335,5 +337,48 @@ describe("toFinishInput", () => {
 	it("returns null unless the state is finishing", () => {
 		expect(toFinishInput(NONE)).toBeNull();
 		expect(toFinishInput(withBenchSet())).toBeNull();
+	});
+});
+
+describe("contract with the finish action", () => {
+	it("builds a payload that the server schema accepts", () => {
+		let state = withBenchSet();
+		state = completeSet(state, "ex-1", "set-1", T1);
+		state = addSet(state, "ex-1", {
+			id: "set-bw",
+			weight: 0,
+			reps: 12,
+			isWarmup: true,
+		});
+		state = completeSet(state, "ex-1", "set-bw", T2);
+		const finishing = beginFinish(state, {
+			name: "Push day",
+			now: "2026-10-20T11:00:00.000Z",
+		});
+
+		const parsed = FinishLiveSessionSchema.safeParse(toFinishInput(finishing));
+		expect(parsed.success).toBe(true);
+		if (parsed.success) {
+			expect(parsed.data.startedAt).toBeInstanceOf(Date);
+			expect(parsed.data.exercises[0].sets.map((s) => s.isWarmup)).toEqual([
+				false,
+				true,
+			]);
+		}
+	});
+});
+
+describe("reopenSession", () => {
+	it("returns a finishing session to active editing, keeping every set", () => {
+		const ready = completeSet(withBenchSet(), "ex-1", "set-1", T1);
+		const finishing = beginFinish(ready, { name: "Push day", now: T2 });
+		const reopened = reopenSession(finishing);
+		expect(reopened).toEqual({ status: "active", session: sessionOf(ready) });
+	});
+
+	it("leaves any other state untouched", () => {
+		const running = withBenchSet();
+		expect(reopenSession(running)).toBe(running);
+		expect(reopenSession(NONE)).toBe(NONE);
 	});
 });
