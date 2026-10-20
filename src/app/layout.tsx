@@ -37,7 +37,7 @@ export default async function RootLayout({
 	const isMaintenance = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
 	return (
-		<html lang='en'>
+		<html lang='es'>
 			<body
 				className={cn(
 					"min-h-screen bg-background font-sans antialiased",
